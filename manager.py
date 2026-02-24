@@ -1,7 +1,7 @@
 import asyncio
 from sqlmodel import Session, select
-from core.database import engine, create_db_and_tables
-from models import Bot
+from app.core.database import engine, create_db_and_tables
+from app.models import Bot
 from worker import BotWorker
 
 async def main():

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from core.database import create_db_and_tables
-from routers import dashboard, bots, rules, schedules, settings
+from app.core.database import create_db_and_tables
+from app.routers import dashboard, bots, rules, schedules, settings
 
 # Inicializa o banco de dados
 create_db_and_tables()
