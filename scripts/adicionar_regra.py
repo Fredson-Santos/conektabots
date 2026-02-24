@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
-from core.database import engine
-from models import Bot, Regra
+from app.core.database import engine
+from app.models import Bot, Regra
 
 def main():
     print("--- ADICIONAR NOVA REGRA DE ENCAMINHAMENTO ---")

@@ -3,9 +3,9 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlmodel import Session, select
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from models import Bot, Agendamento, LogExecucao
-from core.config import templates
-from core.deps import get_session
+from app.models import Bot, Agendamento, LogExecucao
+from app.core.config import templates
+from app.core.deps import get_session
 from worker import aplicar_processamento_mensagem
 
 router = APIRouter(prefix="/agendamentos", tags=["agendamentos"])

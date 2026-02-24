@@ -14,9 +14,9 @@ engine = create_engine(sqlite_url)
 
 def create_db_and_tables():
     # Importar todos os modelos aqui para que o SQLModel os registre
-    import models.config
-    import models.bot
-    import models.rule
-    import models.schedule
-    import models.log
+    import app.models.config
+    import app.models.bot
+    import app.models.rule
+    import app.models.schedule
+    import app.models.log
     SQLModel.metadata.create_all(engine)

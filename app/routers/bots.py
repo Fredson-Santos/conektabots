@@ -4,9 +4,9 @@ from sqlmodel import Session, select
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
-from models import Bot
-from core.config import templates, TEMP_CLIENTS
-from core.deps import get_session
+from app.models import Bot
+from app.core.config import templates, TEMP_CLIENTS
+from app.core.deps import get_session
 
 router = APIRouter(prefix="/bots", tags=["bots"])
 

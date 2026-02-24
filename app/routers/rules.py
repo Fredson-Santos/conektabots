@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlmodel import Session, select
-from models import Bot, Regra
-from core.config import templates
-from core.deps import get_session
+from app.models import Bot, Regra
+from app.core.config import templates
+from app.core.deps import get_session
 
 router = APIRouter(prefix="/regras", tags=["regras"])
 

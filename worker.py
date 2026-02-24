@@ -5,8 +5,8 @@ from datetime import datetime
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from sqlmodel import Session, select
-from core.database import engine
-from models import Bot, Regra, LogExecucao, Agendamento, Configuracao
+from app.core.database import engine
+from app.models import Bot, Regra, LogExecucao, Agendamento, Configuracao
 import re
 import requests
 import hashlib
