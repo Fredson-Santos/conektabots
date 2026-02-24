@@ -149,8 +149,21 @@ class BotWorker:
         return novo_texto
 
     # --- FUNÇÃO CENTRAL DE PROCESSAMENTO ---
-    def processar_mensagem(self, message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub):
+    def processar_mensagem(self, message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub, r_midia="todos"):
         try:
+            # 0. LÓGICA DE FILTRO DE MÍDIA (Novo)
+            if r_midia != "todos":
+                has_media = any([message.photo, message.video, message.document, message.audio, message.voice, message.gif if hasattr(message, 'gif') else False])
+                
+                if r_midia == "foto" and not message.photo:
+                    return None, "Midia bloqueada: Não é foto"
+                if r_midia == "video" and not message.video:
+                    return None, "Midia bloqueada: Não é vídeo"
+                if r_midia == "foto_video" and not (message.photo or message.video):
+                    return None, "Midia bloqueada: Não é foto ou vídeo"
+                if r_midia == "texto" and has_media:
+                    return None, "Midia bloqueada: Mensagem contém mídia, esperado apenas texto"
+
             texto_msg = message.text or ""
             
             # 1. LÓGICA DE BLACKLIST (Bloqueio)
@@ -201,7 +214,9 @@ class BotWorker:
                      "filtro": r.filtro, "substituto": r.substituto, 
                      "bloqueios": r.bloqueios,
                      "somente_se_tiver": r.somente_se_tiver,
-                     "converter_shopee": r.converter_shopee} for r in regras]
+                     "converter_shopee": r.converter_shopee,
+                     "filtro_midia": r.filtro_midia
+                     } for r in regras]
 
     async def aplicar_regras(self):
         regras = await self.carregar_regras()
@@ -225,14 +240,15 @@ class BotWorker:
                             r_filtro=regra['filtro'], r_sub=regra['substituto'], 
                             r_bloqueios=regra['bloqueios'],
                             r_somente=regra['somente_se_tiver'],
-                            r_shopee=regra['converter_shopee']):
+                            r_shopee=regra['converter_shopee'],
+                            r_midia=regra['filtro_midia']):
                 
                 # Conversão Shopee antes do processamento principal
                 if r_shopee:
                     event.message.text = await self.converter_links_shopee(event.message.text)
 
                 msg_processada, erro = self.processar_mensagem(
-                    event.message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub
+                    event.message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub, r_midia
                 )
                 
                 if msg_processada:
@@ -289,7 +305,7 @@ class BotWorker:
                                     # Aplica filtros e transformações
                                     msg_proc, erro = self.processar_mensagem(
                                         msg, ag.nome, ag.bloqueios, ag.somente_se_tiver,
-                                        ag.filtro, ag.substituto
+                                        ag.filtro, ag.substituto, ag.filtro_midia
                                     )
                                     
                                     if msg_proc:

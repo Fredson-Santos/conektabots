@@ -284,13 +284,14 @@ async def listar_regras(request: Request, session: Session = Depends(get_session
 async def criar_regra(
     nome: str = Form(...), origem: str = Form(...), destino: str = Form(...), bot_id: int = Form(...),
     filtro: str = Form(None), substituto: str = Form(None), bloqueios: str = Form(None), somente_se_tiver: str = Form(None),
+    filtro_midia: str = Form("todos"),
     converter_shopee: bool = Form(False),
     session: Session = Depends(get_session)
 ):
     nova_regra = Regra(
         nome=nome, origem=origem, destino=destino, bot_id=bot_id,
         filtro=filtro, substituto=substituto, bloqueios=bloqueios, somente_se_tiver=somente_se_tiver, 
-        converter_shopee=converter_shopee, ativo=True
+        filtro_midia=filtro_midia, converter_shopee=converter_shopee, ativo=True
     )
     session.add(nova_regra)
     session.commit()
@@ -363,13 +364,14 @@ async def criar_agendamento(
     bot_id: int = Form(...), 
     filtro: str = Form(None), substituto: str = Form(None), 
     bloqueios: str = Form(None), somente_se_tiver: str = Form(None),
+    filtro_midia: str = Form("todos"),
     session: Session = Depends(get_session)
 ):
     novo = Agendamento(
         nome=nome, origem=origem, destino=destino, msg_id_atual=msg_id_atual,
         tipo_envio=tipo_envio, horario=horario, bot_id=bot_id, 
         filtro=filtro, substituto=substituto, bloqueios=bloqueios,
-        somente_se_tiver=somente_se_tiver, ativo=True
+        somente_se_tiver=somente_se_tiver, filtro_midia=filtro_midia, ativo=True
     )
     session.add(novo); session.commit()
     return RedirectResponse(url="/agendamentos", status_code=303)
