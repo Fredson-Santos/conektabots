@@ -2,7 +2,13 @@ from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
+from telethon import TelegramClient
+from telethon.sessions import StringSession
+from telethon.errors import SessionPasswordNeededError
 from database import engine, Bot, Regra, LogExecucao, Agendamento, create_db_and_tables
+
+# Cache temporário de login
+TEMP_CLIENTS = {}
 
 # Inicializa o banco de dados
 create_db_and_tables()
@@ -106,6 +112,122 @@ async def atualizar_bot(
         session.add(bot)
         session.commit()
     return RedirectResponse(url="/", status_code=303)
+
+# --- LOGIN USERBOT (NOVO) ---
+
+@app.post("/bots/userbot/enviar-codigo", response_class=HTMLResponse)
+async def userbot_enviar_codigo(
+    request: Request, 
+    nome: str = Form(...), 
+    api_id: str = Form(...), 
+    api_hash: str = Form(...), 
+    phone: str = Form(...)
+):
+    try:
+        client = TelegramClient(StringSession(), api_id, api_hash)
+        await client.connect()
+        if not await client.is_user_authorized():
+            await client.send_code_request(phone)
+            TEMP_CLIENTS[phone] = {"client": client, "nome": nome, "api_id": api_id, "api_hash": api_hash}
+            return templates.TemplateResponse("adicionar_bot.html", {
+                "request": request, 
+                "step": 2, 
+                "phone": phone, 
+                "msg": f"Código enviado para {phone}."
+            })
+        else:
+            return templates.TemplateResponse("adicionar_bot.html", {
+                "request": request, 
+                "step": 1, 
+                "error": "Já logado."
+            })
+    except Exception as e:
+        return templates.TemplateResponse("adicionar_bot.html", {
+            "request": request, 
+            "step": 1, 
+            "error": f"Erro: {str(e)}"
+        })
+
+@app.post("/bots/userbot/validar-codigo", response_class=HTMLResponse)
+async def userbot_validar_codigo(
+    request: Request, 
+    phone: str = Form(...), 
+    code: str = Form(...), 
+    session: Session = Depends(get_session)
+):
+    if phone not in TEMP_CLIENTS:
+        return templates.TemplateResponse("adicionar_bot.html", {
+            "request": request, 
+            "step": 1, 
+            "error": "Sessão expirada."
+        })
+    
+    data = TEMP_CLIENTS[phone]
+    client = data["client"]
+    try:
+        await client.sign_in(phone, code)
+        sessao = client.session.save()
+        await client.disconnect()
+        del TEMP_CLIENTS[phone]
+        
+        novo = Bot(
+            nome=data["nome"], 
+            api_id=data["api_id"], 
+            api_hash=data["api_hash"], 
+            phone=phone, 
+            tipo="user", 
+            session_string=sessao, 
+            ativo=True
+        )
+        session.add(novo)
+        session.commit()
+        return RedirectResponse(url="/", status_code=303)
+    except SessionPasswordNeededError:
+        return templates.TemplateResponse("adicionar_bot.html", {
+            "request": request, 
+            "step": 3, 
+            "phone": phone, 
+            "msg": "Digite sua senha 2FA."
+        })
+    except Exception as e:
+        return templates.TemplateResponse("adicionar_bot.html", {
+            "request": request, 
+            "step": 2, 
+            "phone": phone, 
+            "error": str(e)
+        })
+
+@app.post("/bots/userbot/validar-senha")
+async def userbot_validar_senha(
+    phone: str = Form(...), 
+    password: str = Form(...), 
+    session: Session = Depends(get_session)
+):
+    if phone not in TEMP_CLIENTS:
+        return RedirectResponse(url="/bots/adicionar", status_code=303)
+    
+    data = TEMP_CLIENTS[phone]
+    client = data["client"]
+    try:
+        await client.sign_in(password=password)
+        sessao = client.session.save()
+        await client.disconnect()
+        del TEMP_CLIENTS[phone]
+        
+        novo = Bot(
+            nome=data["nome"], 
+            api_id=data["api_id"], 
+            api_hash=data["api_hash"], 
+            phone=phone, 
+            tipo="user", 
+            session_string=sessao, 
+            ativo=True
+        )
+        session.add(novo)
+        session.commit()
+        return RedirectResponse(url="/", status_code=303)
+    except:
+        return RedirectResponse(url="/bots/adicionar", status_code=303)
 
 # --- REGRAS ---
 

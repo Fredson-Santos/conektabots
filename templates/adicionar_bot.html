@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Novo Bot - Conekta</title>
@@ -7,22 +8,20 @@
     <script>
         function toggleTipo() {
             const tipo = document.getElementById('tipoSelect').value;
-            const divToken = document.getElementById('divToken');
-            const divSession = document.getElementById('divSession');
-            const divPhone = document.getElementById('divPhone');
+            const formToken = document.getElementById('formToken');
+            const formUser = document.getElementById('formUser');
 
             if (tipo === 'bot') {
-                divToken.classList.remove('hidden');
-                divSession.classList.add('hidden');
-                divPhone.classList.add('hidden');
+                formToken.classList.remove('hidden');
+                formUser.classList.add('hidden');
             } else {
-                divToken.classList.add('hidden');
-                divSession.classList.remove('hidden');
-                divPhone.classList.remove('hidden');
+                formToken.classList.add('hidden');
+                formUser.classList.remove('hidden');
             }
         }
     </script>
 </head>
+
 <body class="bg-gray-100 p-10">
     <div class="max-w-2xl mx-auto">
         <div class="mb-5 flex justify-between items-center">
@@ -31,66 +30,132 @@
         </div>
 
         <div class="bg-white p-8 rounded-lg shadow-md">
-            <form action="/bots/criar" method="post" class="space-y-6">
-                
+
+            {% if error %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <strong>Erro:</strong> {{ error }}
+            </div>
+            {% endif %}
+
+            {% if msg %}
+            <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+                {{ msg }}
+            </div>
+            {% endif %}
+
+            {% if not step or step == 1 %}
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Qual tipo de bot?</label>
+                <select id="tipoSelect" onchange="toggleTipo()"
+                    class="block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                    <option value="bot">🤖 Bot API (Token)</option>
+                    <option value="user">👤 Userbot (Telefone)</option>
+                </select>
+            </div>
+
+            <form id="formToken" action="/bots/criar" method="post" class="space-y-4">
+                <input type="hidden" name="tipo" value="bot">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Nome do Bot (Apelido)</label>
-                        <input type="text" name="nome" placeholder="Ex: Atendente 01" required
-                               class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                        <label class="block text-xs font-medium text-gray-700">API ID</label>
+                        <input type="text" name="api_id" required class="mt-1 block w-full rounded border p-2">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Tipo de Conexão</label>
-                        <select id="tipoSelect" name="tipo" onchange="toggleTipo()"
-                                class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
-                            <option value="bot">🤖 Bot API (Token)</option>
-                            <option value="user">👤 Userbot (Conta Real)</option>
-                        </select>
+                        <label class="block text-xs font-medium text-gray-700">API Hash</label>
+                        <input type="text" name="api_hash" required class="mt-1 block w-full rounded border p-2">
                     </div>
                 </div>
-
-                <div class="bg-blue-50 p-4 rounded border border-blue-100">
-                    <h3 class="text-sm font-bold text-blue-800 mb-2">Credenciais do Telegram (my.telegram.org)</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700">API ID</label>
-                            <input type="text" name="api_id" required placeholder="Ex: 123456"
-                                   class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700">API Hash</label>
-                            <input type="text" name="api_hash" required placeholder="Ex: a1b2c3..."
-                                   class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
-                        </div>
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nome do Bot</label>
+                    <input type="text" name="nome" placeholder="Ex: Meu Bot Vendas" required
+                        class="mt-1 block w-full rounded border p-2">
                 </div>
 
-                <div id="divToken">
-                    <label class="block text-sm font-medium text-gray-700">Bot Token (BotFather)</label>
-                    <input type="text" name="bot_token" placeholder="Ex: 123456:ABC-def..."
-                           class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Bot Token (do @BotFather)</label>
+                    <input type="text" name="bot_token" required class="mt-1 block w-full rounded border p-2">
                 </div>
 
-                <div id="divPhone" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700">Telefone</label>
-                    <input type="text" name="phone" placeholder="+5511999999999"
-                           class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
-                </div>
-                
-                <div id="divSession" class="hidden bg-yellow-50 p-4 rounded border border-yellow-200">
-                    <label class="block text-sm font-bold text-yellow-800">String Session</label>
-                    <textarea name="session_string" rows="3" placeholder="Cole a string longa gerada pelo script aqui..."
-                              class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-xs font-mono"></textarea>
-                    <p class="text-xs text-gray-500 mt-2">
-                        ⚠️ Para Userbots, recomendamos gerar a sessão via terminal (`python adicionar_bot.py`) e colar aqui, ou usar o script diretamente. O login via web é complexo.
-                    </p>
-                </div>
 
-                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition">
-                    💾 Salvar Bot
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded">
+                    Salvar Bot Token
                 </button>
             </form>
+
+            <form id="formUser" action="/bots/userbot/enviar-codigo" method="post" class="space-y-4 hidden">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">API ID</label>
+                        <input type="text" name="api_id" required class="mt-1 block w-full rounded border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">API Hash</label>
+                        <input type="text" name="api_hash" required class="mt-1 block w-full rounded border p-2">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nome do Perfil</label>
+                    <input type="text" name="nome" placeholder="Ex: Minha Conta Pessoal" required
+                        class="mt-1 block w-full rounded border p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Seu Telefone (com DDI)</label>
+                    <input type="text" name="phone" placeholder="+5511999999999" required
+                        class="mt-1 block w-full rounded border p-2">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded">
+                    Receber Código de Login ➡
+                </button>
+            </form>
+
+            {% elif step == 2 %}
+
+            <form action="/bots/userbot/validar-codigo" method="post" class="space-y-6">
+                <input type="hidden" name="phone" value="{{ phone }}">
+
+                <div class="text-center">
+                    <h2 class="text-xl font-bold text-gray-800">Verifique seu Telegram</h2>
+                    <p class="text-sm text-gray-500">Enviamos um código para {{ phone }}</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 text-center">Digite o Código</label>
+                    <input type="text" name="code" placeholder="12345" required
+                        class="mt-2 block w-full text-center text-2xl tracking-widest rounded border-2 border-blue-300 p-3">
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded">
+                    Confirmar e Logar ✅
+                </button>
+            </form>
+
+            {% elif step == 3 %}
+
+            <form action="/bots/userbot/validar-senha" method="post" class="space-y-6">
+                <input type="hidden" name="phone" value="{{ phone }}">
+
+                <div class="text-center bg-yellow-50 p-4 rounded border border-yellow-200">
+                    <h2 class="text-lg font-bold text-yellow-800">🔐 Senha Necessária</h2>
+                    <p class="text-sm text-gray-600">Sua conta usa verificação em duas etapas.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Sua Senha do Telegram</label>
+                    <input type="password" name="password" required class="mt-2 block w-full rounded border p-3">
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded">
+                    Finalizar Login 🚀
+                </button>
+            </form>
+
+            {% endif %}
+
         </div>
     </div>
 </body>
+
 </html>
