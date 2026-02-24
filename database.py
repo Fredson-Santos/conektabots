@@ -72,7 +72,17 @@ class LogExecucao(SQLModel, table=True):
     data_hora: datetime = Field(default_factory=datetime.now)
 
 # --- CONFIGURAÇÃO ---
-sqlite_file_name = "database.db"
+import os
+
+# Permite configurar o caminho do banco via variável de ambiente (útil para Docker)
+# Se não for informado, usa o padrão local
+sqlite_file_name = os.getenv("DATABASE_URL", "database.db")
+
+# Garante que a pasta do banco existe (caso o caminho tenha subpastas)
+db_dir = os.path.dirname(sqlite_file_name)
+if db_dir and not os.path.exists(db_dir):
+    os.makedirs(db_dir, exist_ok=True)
+
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 engine = create_engine(sqlite_url)
 
