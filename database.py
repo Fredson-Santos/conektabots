@@ -43,6 +43,12 @@ class Agendamento(SQLModel, table=True):
     msg_id_atual: int   
     tipo_envio: str     
     horario: str        
+    # Filtros e Edições (Adicionado)
+    filtro: Optional[str] = None
+    substituto: Optional[str] = None
+    bloqueios: Optional[str] = None         # Blacklist
+    somente_se_tiver: Optional[str] = None  # Whitelist
+    
     bot_id: int = Field(foreign_key="bot.id")
     bot: Optional[Bot] = Relationship(back_populates="agendamentos")
     ativo: bool = Field(default=True)

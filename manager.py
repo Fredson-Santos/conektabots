@@ -1,10 +1,13 @@
 import asyncio
 from sqlmodel import Session, select
-from database import engine, Bot
+from database import engine, Bot, create_db_and_tables
 from worker import BotWorker
 
 async def main():
     print("🚀 INICIANDO SISTEMA CONEKTA BOTS...")
+    
+    # Inicializa o banco de dados
+    create_db_and_tables()
     
     # 1. Buscar bots ativos no banco
     workers = []
