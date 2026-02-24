@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Agendamento - Conekta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-10">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-5 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800">✏️ Editar Agendamento</h1>
+            <a href="/agendamentos" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">⬅ Voltar</a>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-blue-600">Modificando: {{ ag.nome }}</h2>
+            <form action="/agendamentos/editar/{{ ag.id }}" method="post" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Nome da Tarefa</label>
+                    <input type="text" name="nome" value="{{ ag.nome }}" required
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Bot Responsável</label>
+                    <select name="bot_id" class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                        {% for bot in bots %}
+                        <option value="{{ bot.id }}" {% if bot.id==ag.bot_id %}selected{% endif %}>{{ bot.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Horários (Separados por vírgula)</label>
+                    <input type="text" name="horario" value="{{ ag.horario }}" required
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Origem (ID ou User do Canal)</label>
+                    <input type="text" name="origem" value="{{ ag.origem }}" required
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Destino (ID ou User do Canal)</label>
+                    <input type="text" name="destino" value="{{ ag.destino }}" required
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                </div>
+
+                <div
+                    class="bg-yellow-50 p-3 rounded border border-yellow-200 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-yellow-800">ID da Mensagem Inicial</label>
+                        <input type="number" name="msg_id_atual" value="{{ ag.msg_id_atual }}" required
+                            class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-yellow-800">Tipo de Envio</label>
+                        <select name="tipo_envio" class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border">
+                            <option value="sequencial" {% if ag.tipo_envio=='sequencial' %}selected{% endif %}>🔄
+                                Sequencial</option>
+                            <option value="fixo" {% if ag.tipo_envio=='fixo' %}selected{% endif %}>⏹ Fixo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-yellow-50 p-4 rounded border border-yellow-200">
+                        <h3 class="text-sm font-bold text-yellow-800 mb-2">✂️ Substituição de Texto</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Texto para remover
+                                    (Regex)</label>
+                                <input type="text" name="filtro" value="{{ ag.filtro or '' }}"
+                                    class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Texto novo</label>
+                                <input type="text" name="substituto" value="{{ ag.substituto or '' }}"
+                                    class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded border border-green-200">
+                        <h3 class="text-sm font-bold text-green-800 mb-2">✅ Filtro Obrigatório (Whitelist)</h3>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Só enviar se conter:</label>
+                            <textarea name="somente_se_tiver" rows="3"
+                                class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">{{ ag.somente_se_tiver or '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="bg-red-50 p-4 rounded border border-red-200">
+                        <h3 class="text-sm font-bold text-red-800 mb-2">🚫 Bloquear Mensagem (Blacklist)</h3>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Não enviar se conter:</label>
+                            <input type="text" name="bloqueios" value="{{ ag.bloqueios or '' }}"
+                                class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded border border-blue-200">
+                        <h3 class="text-sm font-bold text-blue-800 mb-2">🖼️ Filtro de Mídia</h3>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Tipo de Mídia Permitido:</label>
+                            <select name="filtro_midia"
+                                class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
+                                <option value="todos" {% if ag.filtro_midia=='todos' %}selected{% endif %}>🌟 Todos
+                                </option>
+                                <option value="foto_video" {% if ag.filtro_midia=='foto_video' %}selected{% endif %}>
+                                    📸🎥 Fotos e Vídeos</option>
+                                <option value="foto" {% if ag.filtro_midia=='foto' %}selected{% endif %}>📸 Somente
+                                    Fotos</option>
+                                <option value="video" {% if ag.filtro_midia=='video' %}selected{% endif %}>🎥 Somente
+                                    Vídeos</option>
+                                <option value="texto" {% if ag.filtro_midia=='texto' %}selected{% endif %}>📄 Somente
+                                    Texto</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

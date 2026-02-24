@@ -6,6 +6,7 @@ from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
 from database import engine, Bot, Regra, LogExecucao, Agendamento, Configuracao, create_db_and_tables
+from worker import aplicar_processamento_mensagem
 
 # Cache temporário de login
 TEMP_CLIENTS = {}
@@ -331,6 +332,7 @@ async def atualizar_regra(
     substituto: str = Form(None),
     bloqueios: str = Form(None), 
     somente_se_tiver: str = Form(None),
+    filtro_midia: str = Form("todos"),
     converter_shopee: bool = Form(False),
     session: Session = Depends(get_session)
 ):
@@ -344,6 +346,7 @@ async def atualizar_regra(
         regra.substituto = substituto
         regra.bloqueios = bloqueios
         regra.somente_se_tiver = somente_se_tiver
+        regra.filtro_midia = filtro_midia
         regra.converter_shopee = converter_shopee
         session.add(regra)
         session.commit()
@@ -376,6 +379,49 @@ async def criar_agendamento(
     session.add(novo); session.commit()
     return RedirectResponse(url="/agendamentos", status_code=303)
 
+@app.get("/agendamentos/editar/{id}", response_class=HTMLResponse)
+async def form_editar_agendamento(request: Request, id: int, session: Session = Depends(get_session)):
+    ag = session.get(Agendamento, id)
+    bots = session.exec(select(Bot)).all()
+    if not ag:
+        return RedirectResponse(url="/agendamentos", status_code=303)
+    return templates.TemplateResponse("editar_agendamento.html", {"request": request, "ag": ag, "bots": bots})
+
+@app.post("/agendamentos/editar/{id}")
+async def atualizar_agendamento(
+    id: int,
+    nome: str = Form(...),
+    origem: str = Form(...),
+    destino: str = Form(...),
+    msg_id_atual: int = Form(...),
+    tipo_envio: str = Form(...),
+    horario: str = Form(...),
+    bot_id: int = Form(...),
+    filtro: str = Form(None),
+    substituto: str = Form(None),
+    bloqueios: str = Form(None),
+    somente_se_tiver: str = Form(None),
+    filtro_midia: str = Form("todos"),
+    session: Session = Depends(get_session)
+):
+    ag = session.get(Agendamento, id)
+    if ag:
+        ag.nome = nome
+        ag.origem = origem
+        ag.destino = destino
+        ag.msg_id_atual = msg_id_atual
+        ag.tipo_envio = tipo_envio
+        ag.horario = horario
+        ag.bot_id = bot_id
+        ag.filtro = filtro
+        ag.substituto = substituto
+        ag.bloqueios = bloqueios
+        ag.somente_se_tiver = somente_se_tiver
+        ag.filtro_midia = filtro_midia
+        session.add(ag)
+        session.commit()
+    return RedirectResponse(url="/agendamentos", status_code=303)
+
 @app.get("/agendamentos/deletar/{id}")
 async def deletar_agendamento(id: int, session: Session = Depends(get_session)):
     item = session.get(Agendamento, id)
@@ -389,6 +435,70 @@ async def toggle_agendamento(id: int, session: Session = Depends(get_session)):
         item.ativo = not item.ativo
         session.add(item)
         session.commit()
+    return RedirectResponse(url="/agendamentos", status_code=303)
+
+@app.get("/agendamentos/enviar_now/{id}")
+async def enviar_agendamento_agora(id: int, session: Session = Depends(get_session)):
+    ag = session.get(Agendamento, id)
+    if not ag or not ag.bot:
+        return RedirectResponse(url="/agendamentos", status_code=303)
+    
+    bot = ag.bot
+    try:
+        # Configurar Cliente Telethon Temporário
+        client = TelegramClient(StringSession(bot.session_string), bot.api_id, bot.api_hash)
+        await client.connect()
+        
+        # Buscar Mensagem
+        def processar_chat_id(chat_id):
+            try: return int(chat_id)
+            except ValueError: return chat_id
+
+        origem_id = processar_chat_id(ag.origem)
+        destino_id = processar_chat_id(ag.destino)
+        
+        msg = await client.get_messages(origem_id, ids=ag.msg_id_atual)
+        if msg:
+            # Aplicar Processamento (Stand-alone de worker.py)
+            msg_proc, erro_proc = aplicar_processamento_mensagem(
+                msg, ag.nome, ag.bloqueios, ag.somente_se_tiver, 
+                ag.filtro, ag.substituto, ag.filtro_midia
+            )
+            
+            if msg_proc:
+                await client.send_message(destino_id, msg_proc)
+                
+                # Log e Atualização (Sempre incrementa no envio manual se solicitado)
+                ag.msg_id_atual += 1
+                session.add(ag)
+                
+                log = LogExecucao(
+                    bot_id=bot.id, bot_nome=bot.nome, origem=str(ag.origem),
+                    destino=str(ag.destino), status="Sucesso", 
+                    mensagem=f"Envio Manual: Agendamento '{ag.nome}' (ID {msg.id}) enviado."
+                )
+                session.add(log)
+                session.commit()
+            else:
+                log = LogExecucao(
+                    bot_id=bot.id, bot_nome=bot.nome, origem=str(ag.origem),
+                    destino=str(ag.destino), status="BLOQUEADO", 
+                    mensagem=f"Envio Manual: '{ag.nome}' bloqueado: {erro_proc}"
+                )
+                session.add(log)
+                session.commit()
+            
+        await client.disconnect()
+    except Exception as e:
+        print(f"Erro no envio manual: {e}")
+        log = LogExecucao(
+            bot_id=bot.id, bot_nome=bot.nome, origem=str(ag.origem),
+            destino=str(ag.destino), status="Erro", 
+            mensagem=f"Erro no envio manual: {str(e)}"
+        )
+        session.add(log)
+        session.commit()
+
     return RedirectResponse(url="/agendamentos", status_code=303)
 
 # --- BLOQUEIOS ---
