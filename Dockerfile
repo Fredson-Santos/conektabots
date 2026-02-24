@@ -22,5 +22,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia o restante do código (respeitando o .dockerignore)
 COPY . .
 
+# Dá permissão de execução ao script de entrada
+RUN chmod +x entrypoint.sh
+
 # Expõe a porta que o FastAPI usa por padrão
 EXPOSE 8000
+
+# Script que roda antes de iniciar o app (para migrações)
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Comando oficial para o painel web (pode ser sobrescrito pelo compose)
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
