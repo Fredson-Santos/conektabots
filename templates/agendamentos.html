@@ -134,12 +134,14 @@
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nome</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Próximo ID</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tipo</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for ag in agendamentos %}
-                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <tr
+                        class="border-b border-gray-200 hover:bg-gray-50 {% if not ag.ativo %}bg-gray-100 opacity-60{% endif %}">
                         <td class="px-5 py-4 text-sm font-bold text-blue-600">{{ ag.horario }}</td>
                         <td class="px-5 py-4 text-sm font-bold text-gray-800">{{ ag.nome }}<br>
                             <span class="font-normal text-xs text-gray-500">{{ ag.bot.nome if ag.bot else 'Bot Deletado'
@@ -160,6 +162,33 @@
                             {% endif %}
                         </td>
                         <td class="px-5 py-4 text-sm">
+                            {% if ag.ativo %}
+                            <span class="flex items-center text-green-600 font-bold">
+                                <span class="h-2 w-2 rounded-full bg-green-600 mr-2"></span>
+                                Ativo
+                            </span>
+                            {% else %}
+                            <span class="flex items-center text-red-500">
+                                <span class="h-2 w-2 rounded-full bg-red-500 mr-2 opacity-50"></span>
+                                Parado
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4 text-sm flex gap-2">
+                            {% if ag.ativo %}
+                            <a href="/agendamentos/toggle/{{ ag.id }}"
+                                class="text-orange-600 hover:text-orange-900 font-bold text-xs uppercase border border-orange-200 px-3 py-1 rounded hover:bg-orange-50"
+                                title="Pausar Agendamento">
+                                ⏸️ Pausar
+                            </a>
+                            {% else %}
+                            <a href="/agendamentos/toggle/{{ ag.id }}"
+                                class="text-green-600 hover:text-green-900 font-bold text-xs uppercase border border-green-200 px-3 py-1 rounded hover:bg-green-50"
+                                title="Retomar Agendamento">
+                                ▶️ Retomar
+                            </a>
+                            {% endif %}
+
                             <a href="/agendamentos/deletar/{{ ag.id }}" onclick="return confirm('Tem certeza?')"
                                 class="text-red-600 hover:text-red-900 font-bold text-xs uppercase border border-red-200 px-3 py-1 rounded hover:bg-red-50">
                                 🗑️ Excluir
