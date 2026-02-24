@@ -203,6 +203,13 @@
                             {% endif %}
                         </td>
                         <td class="px-5 py-4 text-sm flex gap-2">
+                            <a href="/agendamentos/enviar_now/{{ ag.id }}"
+                                class="text-blue-600 hover:text-blue-900 font-bold text-xs uppercase border border-blue-200 px-3 py-1 rounded hover:bg-blue-50"
+                                title="Enviar esta mensagem agora"
+                                onclick="return confirm('Enviar esta mensagem agora mesmo?')">
+                                🚀 Enviar Agora
+                            </a>
+
                             {% if ag.ativo %}
                             <a href="/agendamentos/toggle/{{ ag.id }}"
                                 class="text-orange-600 hover:text-orange-900 font-bold text-xs uppercase border border-orange-200 px-3 py-1 rounded hover:bg-orange-50"
@@ -216,6 +223,11 @@
                                 ▶️ Retomar
                             </a>
                             {% endif %}
+
+                            <a href="/agendamentos/editar/{{ ag.id }}"
+                                class="text-blue-600 hover:text-blue-900 font-bold text-xs uppercase border border-blue-200 px-3 py-1 rounded hover:bg-blue-50">
+                                ✏️ Editar
+                            </a>
 
                             <a href="/agendamentos/deletar/{{ ag.id }}" onclick="return confirm('Tem certeza?')"
                                 class="text-red-600 hover:text-red-900 font-bold text-xs uppercase border border-red-200 px-3 py-1 rounded hover:bg-red-50">

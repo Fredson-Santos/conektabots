@@ -47,6 +47,61 @@ class ShopeeAPI:
         except Exception as e: print(f"   ❌ [Shopee] Exceção: {e}")
         return None
 
+# --- FUNÇÃO DE PROCESSAMENTO DE MENSAGEM (STANDALONE PARA REUSO) ---
+def aplicar_processamento_mensagem(message, nome_referencia, r_bloqueios, r_somente, r_filtro, r_sub, r_midia="todos"):
+    try:
+        # 0. LÓGICA DE FILTRO DE MÍDIA
+        if r_midia != "todos":
+            has_media = any([message.photo, message.video, message.document, message.audio, message.voice, getattr(message, 'gif', False)])
+            
+            if r_midia == "foto" and not message.photo:
+                return None, "Midia bloqueada: Não é foto"
+            if r_midia == "video" and not message.video:
+                return None, "Midia bloqueada: Não é vídeo"
+            if r_midia == "foto_video" and not (message.photo or message.video):
+                return None, "Midia bloqueada: Não é foto ou vídeo"
+            if r_midia == "texto" and has_media:
+                return None, "Midia bloqueada: Mensagem contém mídia, esperado apenas texto"
+
+        texto_msg = message.text or ""
+        
+        # 1. LÓGICA DE BLACKLIST (Bloqueio)
+        if r_bloqueios:
+            termos = [t.strip() for t in r_bloqueios.split(',')]
+            for termo in termos:
+                if termo and re.search(termo, texto_msg, re.IGNORECASE):
+                    return None, f"Match proibido: {termo}"
+
+        # 2. LÓGICA DE WHITELIST COM REGEX
+        if r_somente:
+            termos_obrigatorios = [t.strip() for t in r_somente.split(',')]
+            encontrou = False
+            for termo in termos_obrigatorios:
+                if not termo: continue
+                try:
+                    if re.search(termo, texto_msg, re.IGNORECASE):
+                        encontrou = True
+                        break 
+                except re.error:
+                    if termo.lower() in texto_msg.lower():
+                        encontrou = True
+                        break
+            
+            if not encontrou:
+                return None, "Whitelist não bateu"
+
+        # 3. Substituição
+        if texto_msg and r_filtro and r_sub:
+            try:
+                message.text = re.sub(r_filtro, r_sub, texto_msg, flags=re.IGNORECASE)
+            except Exception as e:
+                print(f"   ❌ Erro Regex sub: {e}")
+        
+        return message, None
+
+    except Exception as e:
+        return None, f"Erro processamento: {str(e)}"
+
 class BotWorker:
     def __init__(self, db_bot):
         self.bot_id = db_bot.id
@@ -148,67 +203,10 @@ class BotWorker:
                 novo_texto = novo_texto.replace(link, novo_link)
         return novo_texto
 
-    # --- FUNÇÃO CENTRAL DE PROCESSAMENTO ---
-    def processar_mensagem(self, message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub, r_midia="todos"):
-        try:
-            # 0. LÓGICA DE FILTRO DE MÍDIA (Novo)
-            if r_midia != "todos":
-                has_media = any([message.photo, message.video, message.document, message.audio, message.voice, message.gif if hasattr(message, 'gif') else False])
-                
-                if r_midia == "foto" and not message.photo:
-                    return None, "Midia bloqueada: Não é foto"
-                if r_midia == "video" and not message.video:
-                    return None, "Midia bloqueada: Não é vídeo"
-                if r_midia == "foto_video" and not (message.photo or message.video):
-                    return None, "Midia bloqueada: Não é foto ou vídeo"
-                if r_midia == "texto" and has_media:
-                    return None, "Midia bloqueada: Mensagem contém mídia, esperado apenas texto"
-
-            texto_msg = message.text or ""
-            
-            # 1. LÓGICA DE BLACKLIST (Bloqueio)
-            if r_bloqueios:
-                termos = [t.strip() for t in r_bloqueios.split(',')]
-                for termo in termos:
-                    if termo and re.search(termo, texto_msg, re.IGNORECASE):
-                        print(f"   🚫 [{self.nome}] Regra/Agenda '{r_nome}': BLOQUEADO (Match: '{termo}')")
-                        return None, f"Match proibido: {termo}"
-
-            # 2. LÓGICA DE WHITELIST COM REGEX
-            if r_somente:
-                termos_obrigatorios = [t.strip() for t in r_somente.split(',')]
-                encontrou = False
-                for termo in termos_obrigatorios:
-                    if not termo: continue
-                    try:
-                        if re.search(termo, texto_msg, re.IGNORECASE):
-                            encontrou = True
-                            break 
-                    except re.error:
-                        if termo.lower() in texto_msg.lower():
-                            encontrou = True
-                            break
-                
-                if not encontrou:
-                    print(f"   ⏭️ [{self.nome}] Regra/Agenda '{r_nome}': Ignorada (Whitelist não bateu)")
-                    return None, "Whitelist não bateu"
-
-            # 3. Substituição
-            if texto_msg and r_filtro and r_sub:
-                try:
-                    message.text = re.sub(r_filtro, r_sub, texto_msg, flags=re.IGNORECASE)
-                except Exception as e:
-                    print(f"   ❌ Erro Regex sub: {e}")
-            
-            return message, None
-
-        except Exception as e:
-            return None, f"Erro processamento: {str(e)}"
-
     # --- TAREFA 2: MONITOR DE REGRAS ---
     async def carregar_regras(self):
         with Session(engine) as session:
-            statement = select(Regra).where(Regra.bot_id == self.bot_id, Regra.ativo == True)
+            statement = select(Regra).where(Regra.bot_id == self.bot_id).where(Regra.ativo == True)
             regras = session.exec(statement).all()
             return [{"id": r.id, "origem": r.origem, "destino": r.destino, "nome": r.nome, 
                      "filtro": r.filtro, "substituto": r.substituto, 
@@ -247,7 +245,7 @@ class BotWorker:
                 if r_shopee:
                     event.message.text = await self.converter_links_shopee(event.message.text)
 
-                msg_processada, erro = self.processar_mensagem(
+                msg_processada, erro = aplicar_processamento_mensagem(
                     event.message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub, r_midia
                 )
                 
@@ -280,7 +278,7 @@ class BotWorker:
                 segundos_para_proximo_minuto = 60 - datetime.now().second
                 
                 with Session(engine) as session:
-                    agendamentos = session.exec(select(Agendamento).where(Agendamento.bot_id == self.bot_id, Agendamento.ativo == True)).all()
+                    agendamentos = session.exec(select(Agendamento).where(Agendamento.bot_id == self.bot_id).where(Agendamento.ativo == True)).all()
                     for ag in agendamentos:
                         lista_horarios = [h.strip() for h in ag.horario.split(',')]
                         if agora in lista_horarios:
@@ -290,8 +288,6 @@ class BotWorker:
                             try:
                                 # Lógica de Pular Bloqueados (Somente para Sequencial)
                                 max_tentativas = 10 if ag.tipo_envio == "sequencial" else 1
-                                foi_enviado_ou_fixo = False
-
                                 for tentativa in range(max_tentativas):
                                     msg = await self.client.get_messages(origem_id, ids=ag.msg_id_atual)
                                     
@@ -303,7 +299,7 @@ class BotWorker:
                                         break
 
                                     # Aplica filtros e transformações
-                                    msg_proc, erro = self.processar_mensagem(
+                                    msg_proc, erro = aplicar_processamento_mensagem(
                                         msg, ag.nome, ag.bloqueios, ag.somente_se_tiver,
                                         ag.filtro, ag.substituto, ag.filtro_midia
                                     )
@@ -312,7 +308,6 @@ class BotWorker:
                                         await self.fila_envio.put((destino_id, msg_proc, f"Agenda: {ag.nome}", ag.origem))
                                         if ag.tipo_envio == "sequencial":
                                             ag.msg_id_atual += 1
-                                        foi_enviado_ou_fixo = True
                                         break
                                     else:
                                         # Foi bloqueado por filtro
@@ -322,9 +317,8 @@ class BotWorker:
                                         if ag.tipo_envio == "sequencial":
                                             print(f"      ⏭️  ID {ag.msg_id_atual} bloqueado. Pulando para o próximo...")
                                             ag.msg_id_atual += 1
-                                            # Continua o loop para a próxima tentativa
                                         else:
-                                            break # Fixo não pula
+                                            break
                                 
                                 if ag.tipo_envio == "sequencial":
                                     session.add(ag)
