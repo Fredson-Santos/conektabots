@@ -5,11 +5,12 @@ services:
     container_name: conekta_web
     command: uvicorn app:app --host 0.0.0.0 --port 8000
     volumes:
-      - ./database.db:/app/database.db  # Persiste apenas o banco de dados
+      - conekta_data:/app/data
     ports:
       - "${WEB_PORT:-8005}:8000"
     environment:
       - TZ=${TZ:-America/Sao_Paulo}
+      - DATABASE_URL=data/database.db
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
@@ -23,7 +24,11 @@ services:
     container_name: conekta_manager
     command: python manager.py
     volumes:
-      - ./database.db:/app/database.db  # Mesmo banco usado pela API
+      - conekta_data:/app/data
     environment:
       - TZ=${TZ:-America/Sao_Paulo}
+      - DATABASE_URL=data/database.db
     restart: always
+
+volumes:
+  conekta_data:
