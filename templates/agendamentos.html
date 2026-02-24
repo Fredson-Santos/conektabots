@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Agendamentos - Conekta</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 p-10">
     <div class="max-w-4xl mx-auto">
         <div class="mb-5 flex justify-between items-center">
@@ -15,11 +17,11 @@
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 class="text-xl font-semibold mb-4 text-blue-600">Novo Agendamento</h2>
             <form action="/agendamentos/criar" method="post" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
+
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700">Nome da Tarefa</label>
                     <input type="text" name="nome" placeholder="Ex: Oferta Manhã" required
-                           class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
                 </div>
 
                 <div>
@@ -34,27 +36,28 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Horários (Separados por vírgula)</label>
                     <input type="text" name="horario" placeholder="Ex: 09:00, 12:30, 18:00" required
-                           class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
                     <p class="text-xs text-gray-500 mt-1">O bot verificará todos esses horários.</p>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Origem (ID ou User do Canal)</label>
                     <input type="text" name="origem" placeholder="Ex: -100123456789" required
-                           class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Destino (ID ou User do Canal)</label>
                     <input type="text" name="destino" placeholder="Ex: @meucanal" required
-                           class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-2 border">
                 </div>
 
-                <div class="bg-yellow-50 p-3 rounded border border-yellow-200 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                    class="bg-yellow-50 p-3 rounded border border-yellow-200 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-bold text-yellow-800">ID da Mensagem Inicial</label>
                         <input type="number" name="msg_id_atual" placeholder="Ex: 1045" required
-                               class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border">
+                            class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border">
                         <p class="text-xs text-gray-500 mt-1">Pegue o ID clicando em "Copiar Link" no Telegram</p>
                     </div>
 
@@ -68,8 +71,55 @@
                     </div>
                 </div>
 
+                <!-- Novos campos de filtro (Estilizados como em Regras) -->
+                <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div class="bg-yellow-50 p-4 rounded border border-yellow-200">
+                        <h3 class="text-sm font-bold text-yellow-800 mb-2">✂️ Substituição de Texto</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Texto para remover
+                                    (Regex)</label>
+                                <input type="text" name="filtro" placeholder="Ex: @canalantigo"
+                                    class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Texto novo</label>
+                                <input type="text" name="substituto" placeholder="Ex: @meucanal"
+                                    class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded border border-green-200">
+                        <h3 class="text-sm font-bold text-green-800 mb-2">✅ Filtro Obrigatório (Whitelist)</h3>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Só enviar se conter (separe por
+                                vírgula):</label>
+                            <textarea name="somente_se_tiver" rows="3" placeholder="Ex: promoção, oferta, grátis"
+                                class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Se a mensagem NÃO tiver uma dessas palavras, ela será
+                                ignorada.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-red-50 p-4 rounded border border-red-200 md:col-span-2">
+                        <h3 class="text-sm font-bold text-red-800 mb-2">🚫 Bloquear Mensagem (Blacklist)</h3>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Não enviar se conter (separe por
+                                vírgula):</label>
+                            <input type="text" name="bloqueios" placeholder="Ex: aposta, cassino, http, tigrinho"
+                                class="mt-1 block w-full rounded border-gray-300 bg-white p-2 border text-sm">
+                            <p class="text-xs text-gray-500 mt-1">Se a mensagem tiver qualquer uma dessas palavras, ela
+                                será descartada.</p>
+                        </div>
+                    </div>
+
+                </div>
+
                 <div class="md:col-span-2">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <button type="submit"
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
                         Salvar Agendamento
                     </button>
                 </div>
@@ -92,20 +142,28 @@
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
                         <td class="px-5 py-4 text-sm font-bold text-blue-600">{{ ag.horario }}</td>
                         <td class="px-5 py-4 text-sm font-bold text-gray-800">{{ ag.nome }}<br>
-                            <span class="font-normal text-xs text-gray-500">{{ ag.bot.nome }}</span>
+                            <span class="font-normal text-xs text-gray-500">{{ ag.bot.nome if ag.bot else 'Bot Deletado'
+                                }}</span>
                         </td>
                         <td class="px-5 py-4 text-sm">
                             <span class="bg-gray-200 px-2 py-1 rounded font-mono">{{ ag.msg_id_atual }}</span>
                         </td>
                         <td class="px-5 py-4 text-sm">
                             {% if ag.tipo_envio == 'sequencial' %}
-                                <span class="text-green-600 text-xs font-bold uppercase">Sequencial</span>
+                            <span
+                                class="bg-green-100 text-green-800 px-2 py-1 rounded text-[10px] font-bold uppercase italic">🔄
+                                Sequencial</span>
                             {% else %}
-                                <span class="text-gray-600 text-xs font-bold uppercase">Fixo</span>
+                            <span
+                                class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold uppercase italic">⏹
+                                Fixo</span>
                             {% endif %}
                         </td>
                         <td class="px-5 py-4 text-sm">
-                            <a href="/agendamentos/deletar/{{ ag.id }}" class="text-red-600 hover:text-red-900 font-bold text-xs uppercase">Excluir</a>
+                            <a href="/agendamentos/deletar/{{ ag.id }}" onclick="return confirm('Tem certeza?')"
+                                class="text-red-600 hover:text-red-900 font-bold text-xs uppercase border border-red-200 px-3 py-1 rounded hover:bg-red-50">
+                                🗑️ Excluir
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -114,4 +172,5 @@
         </div>
     </div>
 </body>
+
 </html>

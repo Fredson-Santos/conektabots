@@ -35,7 +35,8 @@ templates/               # Templates HTML (Jinja2)
 
 3. **Adicione um bot:**
    ```bash
-   python adicionar_bot.py
+      pip install -r requirements.txt
+
    ```
    Siga as instruções para cadastrar um bot (userbot ou bot API).
 

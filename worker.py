@@ -57,6 +57,50 @@ class BotWorker:
             finally:
                 self.fila_envio.task_done()
 
+    # --- FUNÇÃO CENTRAL DE PROCESSAMENTO ---
+    def processar_mensagem(self, message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub):
+        try:
+            texto_msg = message.text or ""
+            
+            # 1. LÓGICA DE BLACKLIST (Bloqueio)
+            if r_bloqueios:
+                termos = [t.strip() for t in r_bloqueios.split(',')]
+                for termo in termos:
+                    if termo and re.search(termo, texto_msg, re.IGNORECASE):
+                        print(f"   🚫 [{self.nome}] Regra/Agenda '{r_nome}': BLOQUEADO (Match: '{termo}')")
+                        return None, f"Match proibido: {termo}"
+
+            # 2. LÓGICA DE WHITELIST COM REGEX
+            if r_somente:
+                termos_obrigatorios = [t.strip() for t in r_somente.split(',')]
+                encontrou = False
+                for termo in termos_obrigatorios:
+                    if not termo: continue
+                    try:
+                        if re.search(termo, texto_msg, re.IGNORECASE):
+                            encontrou = True
+                            break 
+                    except re.error:
+                        if termo.lower() in texto_msg.lower():
+                            encontrou = True
+                            break
+                
+                if not encontrou:
+                    print(f"   ⏭️ [{self.nome}] Regra/Agenda '{r_nome}': Ignorada (Whitelist não bateu)")
+                    return None, "Whitelist não bateu"
+
+            # 3. Substituição
+            if texto_msg and r_filtro and r_sub:
+                try:
+                    message.text = re.sub(r_filtro, r_sub, texto_msg, flags=re.IGNORECASE)
+                except Exception as e:
+                    print(f"   ❌ Erro Regex sub: {e}")
+            
+            return message, None
+
+        except Exception as e:
+            return None, f"Erro processamento: {str(e)}"
+
     # --- TAREFA 2: MONITOR DE REGRAS ---
     async def carregar_regras(self):
         with Session(engine) as session:
@@ -80,7 +124,7 @@ class BotWorker:
         self.handlers_ativos.clear()
         
         for regra in regras:
-            print(f"   🔎 Regra '{regra['nome']}' carregada. Whitelist: [{regra['somente_se_tiver']}]")
+            print(f"   🔎 Regra '{regra['nome']}' carregada.")
             
             origem = self.processar_chat_id(regra['origem'])
             destino = self.processar_chat_id(regra['destino'])
@@ -89,53 +133,16 @@ class BotWorker:
                             r_filtro=regra['filtro'], r_sub=regra['substituto'], 
                             r_bloqueios=regra['bloqueios'],
                             r_somente=regra['somente_se_tiver']):
-                try:
-                    texto_msg = event.message.text or ""
-                    
-                    # 1. LÓGICA DE BLACKLIST (Bloqueio)
-                    if r_bloqueios:
-                        termos = [t.strip() for t in r_bloqueios.split(',')]
-                        for termo in termos:
-                            # Usamos regex search simples aqui também para ser consistente
-                            if termo and re.search(termo, texto_msg, re.IGNORECASE):
-                                print(f"   🚫 [{self.nome}] Regra '{r_nome}': BLOQUEADO (Match: '{termo}')")
-                                self.registrar_log(o, d, "BLOQUEADO", f"Match proibido: {termo}")
-                                return 
-
-                    # 2. LÓGICA DE WHITELIST COM REGEX (ATUALIZADO!)
-                    if r_somente:
-                        # Separa por vírgula
-                        termos_obrigatorios = [t.strip() for t in r_somente.split(',')]
-                        encontrou = False
-                        
-                        for termo in termos_obrigatorios:
-                            if not termo: continue
-                            
-                            try:
-                                # Tenta buscar usando Regex
-                                if re.search(termo, texto_msg, re.IGNORECASE):
-                                    encontrou = True
-                                    break # Achou um match, libera!
-                            except re.error:
-                                # Se o usuário digitou um regex inválido, faz busca simples de texto
-                                if termo.lower() in texto_msg.lower():
-                                    encontrou = True
-                                    break
-                        
-                        if not encontrou:
-                            print(f"   ⏭️ [{self.nome}] Regra '{r_nome}': Ignorada (Regex não bateu)")
-                            return # IGNORA
-
-                    # 3. Substituição e Envio
-                    mensagem_final = event.message
-                    if texto_msg and r_filtro and r_sub:
-                        mensagem_final.text = re.sub(r_filtro, r_sub, texto_msg, flags=re.IGNORECASE)
-                    
+                
+                msg_processada, erro = self.processar_mensagem(
+                    event.message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub
+                )
+                
+                if msg_processada:
                     print(f"   📥 [{self.nome}] Recebido. Fila...")
-                    await self.fila_envio.put( (d, mensagem_final, r_nome, o) )
-                    
-                except Exception as e:
-                    print(f"   ❌ Erro handler: {e}")
+                    await self.fila_envio.put( (d, msg_processada, r_nome, o) )
+                elif erro and "BLOQUEADO" in erro:
+                    self.registrar_log(o, d, "BLOQUEADO", erro)
 
             self.client.add_event_handler(handler, events.NewMessage(chats=origem))
             self.handlers_ativos.append(handler)
@@ -167,15 +174,47 @@ class BotWorker:
                             origem_id = self.processar_chat_id(ag.origem)
                             destino_id = self.processar_chat_id(ag.destino)
                             try:
-                                msg = await self.client.get_messages(origem_id, ids=ag.msg_id_atual)
-                                if msg:
-                                    await self.fila_envio.put((destino_id, msg, f"Agenda: {ag.nome}", ag.origem))
-                                    if ag.tipo_envio == "sequencial":
-                                        ag.msg_id_atual += 1
-                                        session.add(ag)
-                                        session.commit()
-                                else:
-                                    print(f"      ⚠️ Msg {ag.msg_id_atual} não encontrada.")
+                                # Lógica de Pular Bloqueados (Somente para Sequencial)
+                                max_tentativas = 10 if ag.tipo_envio == "sequencial" else 1
+                                foi_enviado_ou_fixo = False
+
+                                for tentativa in range(max_tentativas):
+                                    msg = await self.client.get_messages(origem_id, ids=ag.msg_id_atual)
+                                    
+                                    if not msg:
+                                        print(f"      ⚠️ Msg {ag.msg_id_atual} não encontrada.")
+                                        if ag.tipo_envio == "sequencial":
+                                            ag.msg_id_atual += 1
+                                            continue
+                                        break
+
+                                    # Aplica filtros e transformações
+                                    msg_proc, erro = self.processar_mensagem(
+                                        msg, ag.nome, ag.bloqueios, ag.somente_se_tiver,
+                                        ag.filtro, ag.substituto
+                                    )
+                                    
+                                    if msg_proc:
+                                        await self.fila_envio.put((destino_id, msg_proc, f"Agenda: {ag.nome}", ag.origem))
+                                        if ag.tipo_envio == "sequencial":
+                                            ag.msg_id_atual += 1
+                                        foi_enviado_ou_fixo = True
+                                        break
+                                    else:
+                                        # Foi bloqueado por filtro
+                                        if erro and "BLOQUEADO" in erro:
+                                            self.registrar_log(ag.origem, destino_id, "BLOQUEADO", erro)
+                                        
+                                        if ag.tipo_envio == "sequencial":
+                                            print(f"      ⏭️  ID {ag.msg_id_atual} bloqueado. Pulando para o próximo...")
+                                            ag.msg_id_atual += 1
+                                            # Continua o loop para a próxima tentativa
+                                        else:
+                                            break # Fixo não pula
+                                
+                                if ag.tipo_envio == "sequencial":
+                                    session.add(ag)
+                                    session.commit()
                             except Exception as e:
                                 print(f"      ❌ Erro: {e}")
             except Exception as e:

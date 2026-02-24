@@ -2,7 +2,10 @@ from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
-from database import engine, Bot, Regra, LogExecucao, Agendamento
+from database import engine, Bot, Regra, LogExecucao, Agendamento, create_db_and_tables
+
+# Inicializa o banco de dados
+create_db_and_tables()
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -179,11 +182,16 @@ async def listar_agendamentos(request: Request, session: Session = Depends(get_s
 async def criar_agendamento(
     nome: str = Form(...), origem: str = Form(...), destino: str = Form(...),
     msg_id_atual: int = Form(...), tipo_envio: str = Form(...), horario: str = Form(...),
-    bot_id: int = Form(...), session: Session = Depends(get_session)
+    bot_id: int = Form(...), 
+    filtro: str = Form(None), substituto: str = Form(None), 
+    bloqueios: str = Form(None), somente_se_tiver: str = Form(None),
+    session: Session = Depends(get_session)
 ):
     novo = Agendamento(
         nome=nome, origem=origem, destino=destino, msg_id_atual=msg_id_atual,
-        tipo_envio=tipo_envio, horario=horario, bot_id=bot_id, ativo=True
+        tipo_envio=tipo_envio, horario=horario, bot_id=bot_id, 
+        filtro=filtro, substituto=substituto, bloqueios=bloqueios,
+        somente_se_tiver=somente_se_tiver, ativo=True
     )
     session.add(novo); session.commit()
     return RedirectResponse(url="/agendamentos", status_code=303)
