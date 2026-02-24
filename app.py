@@ -444,18 +444,45 @@ async def enviar_agendamento_agora(id: int, session: Session = Depends(get_sessi
         return RedirectResponse(url="/agendamentos", status_code=303)
     
     bot = ag.bot
+    client = None
     try:
-        # Configurar Cliente Telethon Temporário
+        # Configurar Cliente Telethon com suporte a login robusto
         client = TelegramClient(StringSession(bot.session_string), bot.api_id, bot.api_hash)
         await client.connect()
         
-        # Buscar Mensagem
-        def processar_chat_id(chat_id):
-            try: return int(chat_id)
-            except ValueError: return chat_id
+        if not await client.is_user_authorized():
+            if bot.tipo == "bot" and bot.bot_token:
+                await client.start(bot_token=bot.bot_token)
+                bot.session_string = client.session.save()
+                session.add(bot)
+                session.commit()
+            else:
+                raise Exception("Bot não autorizado. Verifique a sessão.")
+        
+        # Funções de processamento local
+        def get_chat_list(chat_id):
+            if not chat_id: return []
+            parts = [p.strip() for p in str(chat_id).split(',')]
+            res = []
+            for p in parts:
+                if not p: continue
+                try: res.append(int(p))
+                except ValueError: res.append(p)
+            return res
 
-        origem_id = processar_chat_id(ag.origem)
-        destino_id = processar_chat_id(ag.destino)
+        origens = get_chat_list(ag.origem)
+        destinos = get_chat_list(ag.destino)
+        
+        if not origens or not destinos:
+            raise Exception("Origem ou Destino inválidos.")
+            
+        origem_id = origens[0]
+        
+        # Pre-resolver entidade para evitar 'ResolveUsernameRequest' ou 'ValueError'
+        try:
+            await client.get_entity(origem_id)
+        except Exception as e:
+            print(f"⚠️ Aviso: Falha ao resolver entidade {origem_id}: {e}")
         
         msg = await client.get_messages(origem_id, ids=ag.msg_id_atual)
         if msg:
@@ -466,16 +493,18 @@ async def enviar_agendamento_agora(id: int, session: Session = Depends(get_sessi
             )
             
             if msg_proc:
-                await client.send_message(destino_id, msg_proc)
+                # Loop para múltiplos destinos
+                for d in destinos:
+                    await client.send_message(d, msg_proc)
                 
-                # Log e Atualização (Sempre incrementa no envio manual se solicitado)
+                # Log e Atualização
                 ag.msg_id_atual += 1
                 session.add(ag)
                 
                 log = LogExecucao(
                     bot_id=bot.id, bot_nome=bot.nome, origem=str(ag.origem),
                     destino=str(ag.destino), status="Sucesso", 
-                    mensagem=f"Envio Manual: Agendamento '{ag.nome}' (ID {msg.id}) enviado."
+                    mensagem=f"Envio Manual: Agendamento '{ag.nome}' (ID {msg.id}) enviado para {len(destinos)} destino(s)."
                 )
                 session.add(log)
                 session.commit()
@@ -487,8 +516,9 @@ async def enviar_agendamento_agora(id: int, session: Session = Depends(get_sessi
                 )
                 session.add(log)
                 session.commit()
+        else:
+            raise Exception(f"Mensagem ID {ag.msg_id_atual} não encontrada na origem.")
             
-        await client.disconnect()
     except Exception as e:
         print(f"Erro no envio manual: {e}")
         log = LogExecucao(
@@ -498,6 +528,9 @@ async def enviar_agendamento_agora(id: int, session: Session = Depends(get_sessi
         )
         session.add(log)
         session.commit()
+    finally:
+        if client:
+            await client.disconnect()
 
     return RedirectResponse(url="/agendamentos", status_code=303)
 
