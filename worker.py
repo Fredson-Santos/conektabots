@@ -151,11 +151,22 @@ class BotWorker:
                     else: self.shopee = None
         except Exception as e: print(f"❌ Erro Hot Reload Config Shopee: {e}")
 
-    def processar_chat_id(self, chat_id):
-        try:
-            return int(chat_id)
-        except ValueError:
-            return chat_id
+    def processar_chat_id(self, chat_id, return_list=False):
+        if not chat_id:
+            return [] if return_list else None
+        
+        parts = [p.strip() for p in str(chat_id).split(',')]
+        results = []
+        for p in parts:
+            if not p: continue
+            try:
+                results.append(int(p))
+            except ValueError:
+                results.append(p)
+        
+        if return_list:
+            return results
+        return results[0] if results else None
 
     def registrar_log(self, origem, destino, status, mensagem):
         try:
@@ -174,19 +185,28 @@ class BotWorker:
         print(f"   🐢 [{self.nome}] Fila de envio iniciada...")
         while True:
             item = await self.fila_envio.get()
-            destino, mensagem_original, regra_nome, log_origem = item
-            try:
-                await self.client.send_message(destino, mensagem_original)
-                msg_log = f"'{regra_nome}': Enviada (Restam {self.fila_envio.qsize()})"
-                print(f"   🚀 [{self.nome}] {msg_log}")
-                self.registrar_log(log_origem, destino, "Sucesso", msg_log)
-                tempo_espera = random.uniform(2.0, 5.0)
-                await asyncio.sleep(tempo_espera)
-            except Exception as e:
-                print(f"   ❌ Erro no envio: {e}")
-                self.registrar_log(log_origem, destino, "Erro", str(e))
-            finally:
-                self.fila_envio.task_done()
+            destinos, mensagem_original, regra_nome, log_origem = item
+            
+            # Garante que destinos seja uma lista
+            if not isinstance(destinos, list):
+                destinos = [destinos]
+            
+            for d in destinos:
+                try:
+                    await self.client.send_message(d, mensagem_original)
+                    msg_log = f"'{regra_nome}': Enviada para {d} (Restam {self.fila_envio.qsize()})"
+                    print(f"   🚀 [{self.nome}] {msg_log}")
+                    self.registrar_log(log_origem, d, "Sucesso", msg_log)
+                    
+                    if len(destinos) > 1:
+                        await asyncio.sleep(random.uniform(1.0, 2.0))
+                except Exception as e:
+                    print(f"   ❌ Erro no envio para {d}: {e}")
+                    self.registrar_log(log_origem, d, "Erro", str(e))
+            
+            # Delay entre itens da fila
+            await asyncio.sleep(random.uniform(2.0, 5.0))
+            self.fila_envio.task_done()
 
     # --- LÓGICA SHOPEE ---
     async def converter_links_shopee(self, texto):
@@ -231,10 +251,14 @@ class BotWorker:
         for regra in regras:
             print(f"   🔎 Regra '{regra['nome']}' carregada.")
             
-            origem = self.processar_chat_id(regra['origem'])
-            destino = self.processar_chat_id(regra['destino'])
+            origens = self.processar_chat_id(regra['origem'], return_list=True)
+            destinos = self.processar_chat_id(regra['destino'], return_list=True)
             
-            async def handler(event, d=destino, o=origem, r_nome=regra['nome'], 
+            if not origens or not destinos:
+                print(f"   ⚠️ Regra '{regra['nome']}' ignorada: Origem ou Destino inválidos.")
+                continue
+
+            async def handler(event, d=destinos, o=origens, r_nome=regra['nome'], 
                             r_filtro=regra['filtro'], r_sub=regra['substituto'], 
                             r_bloqueios=regra['bloqueios'],
                             r_somente=regra['somente_se_tiver'],
@@ -251,11 +275,12 @@ class BotWorker:
                 
                 if msg_processada:
                     print(f"   📥 [{self.nome}] Recebido. Fila...")
-                    await self.fila_envio.put( (d, msg_processada, r_nome, o) )
+                    # Passa a lista de destinos e a primeira origem como referência de log
+                    await self.fila_envio.put( (d, msg_processada, r_nome, o[0]) )
                 elif erro and "BLOQUEADO" in erro:
-                    self.registrar_log(o, d, "BLOQUEADO", erro)
+                    self.registrar_log(o[0], d[0], "BLOQUEADO", erro)
 
-            self.client.add_event_handler(handler, events.NewMessage(chats=origem))
+            self.client.add_event_handler(handler, events.NewMessage(chats=origens))
             self.handlers_ativos.append(handler)
 
         self.hash_regras_atual = hash_novo
@@ -283,8 +308,12 @@ class BotWorker:
                         lista_horarios = [h.strip() for h in ag.horario.split(',')]
                         if agora in lista_horarios:
                             print(f"   ⏰ Executando agendamento: {ag.nome} ({agora})")
-                            origem_id = self.processar_chat_id(ag.origem)
-                            destino_id = self.processar_chat_id(ag.destino)
+                            origens = self.processar_chat_id(ag.origem, return_list=True)
+                            destinos = self.processar_chat_id(ag.destino, return_list=True)
+                            
+                            if not origens or not destinos: continue
+                            
+                            origem_id = origens[0]
                             try:
                                 # Lógica de Pular Bloqueados (Somente para Sequencial)
                                 max_tentativas = 10 if ag.tipo_envio == "sequencial" else 1
@@ -305,14 +334,14 @@ class BotWorker:
                                     )
                                     
                                     if msg_proc:
-                                        await self.fila_envio.put((destino_id, msg_proc, f"Agenda: {ag.nome}", ag.origem))
+                                        await self.fila_envio.put((destinos, msg_proc, f"Agenda: {ag.nome}", origem_id))
                                         if ag.tipo_envio == "sequencial":
                                             ag.msg_id_atual += 1
                                         break
                                     else:
                                         # Foi bloqueado por filtro
                                         if erro and "BLOQUEADO" in erro:
-                                            self.registrar_log(ag.origem, destino_id, "BLOQUEADO", erro)
+                                            self.registrar_log(origem_id, destinos[0], "BLOQUEADO", erro)
                                         
                                         if ag.tipo_envio == "sequencial":
                                             print(f"      ⏭️  ID {ag.msg_id_atual} bloqueado. Pulando para o próximo...")
