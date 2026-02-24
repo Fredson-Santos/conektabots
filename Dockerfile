@@ -2,23 +2,25 @@
 FROM python:3.10-slim
 
 # Configurações para Python rodar melhor em container
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TZ=America/Sao_Paulo
 
 # Define a pasta de trabalho dentro do container
 WORKDIR /app
 
-# Instala dependências do sistema (necessário para compilar algumas libs)
+# Instala dependências do sistema necessárias para compilar algumas libs
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia e instala as dependências do projeto
+# Copia apenas o requirements primeiro para aproveitar o cache do Docker
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia todo o código para dentro da imagem
+# Copia o restante do código (respeitando o .dockerignore)
 COPY . .
 
-# Informa que a porta 8000 será usada
+# Expõe a porta que o FastAPI usa por padrão
 EXPOSE 8000

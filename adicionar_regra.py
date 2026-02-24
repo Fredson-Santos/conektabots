@@ -26,7 +26,7 @@ def main():
 
         # 3. Definir a Regra
         print(f"\nConfigurando regra para: {bot_selecionado.nome}")
-        nome_regra = input("Nome da Regra (ex: Repasse VIP): ")
+        nome_regra = input("Nome da Regra (ex: Reenvio VIP): ")
         origem = input("Canal de Origem (Username ou ID): ")
         destino = input("Canal de Destino (Username ou ID): ")
         
