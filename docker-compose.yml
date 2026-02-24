@@ -5,12 +5,17 @@ services:
     container_name: conekta_web
     command: uvicorn app:app --host 0.0.0.0 --port 8000
     volumes:
-      - .:/app  # Monta a pasta atual para salvar o database.db no seu servidor real
+      - ./database.db:/app/database.db  # Persiste apenas o banco de dados
     ports:
-      - "8005:8000"
+      - "${WEB_PORT:-8005}:8000"
     environment:
-      - TZ=America/Sao_Paulo # Define o fuso horário correto
+      - TZ=${TZ:-America/Sao_Paulo}
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Serviço do Gerente (Bots)
   manager:
@@ -18,7 +23,7 @@ services:
     container_name: conekta_manager
     command: python manager.py
     volumes:
-      - .:/app  # Importante: usa o mesmo volume para ler o banco que o site editou
+      - ./database.db:/app/database.db  # Mesmo banco usado pela API
     environment:
-      - TZ=America/Sao_Paulo
+      - TZ=${TZ:-America/Sao_Paulo}
     restart: always

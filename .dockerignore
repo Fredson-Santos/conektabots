@@ -1,0 +1,12 @@
+venv/
+.git/
+__pycache__/
+*.db
+*.log
+.env
+.gemini/
+.idea/
+.vscode/
+node_modules/
+dist/
+build/
