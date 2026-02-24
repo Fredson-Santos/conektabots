@@ -380,6 +380,15 @@ async def deletar_agendamento(id: int, session: Session = Depends(get_session)):
     if item: session.delete(item); session.commit()
     return RedirectResponse(url="/agendamentos", status_code=303)
 
+@app.get("/agendamentos/toggle/{id}")
+async def toggle_agendamento(id: int, session: Session = Depends(get_session)):
+    item = session.get(Agendamento, id)
+    if item:
+        item.ativo = not item.ativo
+        session.add(item)
+        session.commit()
+    return RedirectResponse(url="/agendamentos", status_code=303)
+
 # --- BLOQUEIOS ---
 
 @app.get("/bloqueios", response_class=HTMLResponse)
