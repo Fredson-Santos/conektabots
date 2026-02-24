@@ -2,7 +2,8 @@ import asyncio
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from sqlmodel import Session, select
-from database import Bot, engine
+from core.database import engine
+from models import Bot
 
 #Funcao para salvar no banco
 def salvar_bot(dados_bot):
