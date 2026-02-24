@@ -45,7 +45,7 @@ ConektaBots é uma plataforma robusta para gerenciamento e automação de bots d
    ```
 
 4. **Inicie os serviços:**
-   - **Painel Web:** `uvicorn app:app --reload`
+   - **Painel Web:** `uvicorn main:app --reload`
    - **Gerenciador de Bots:** `python manager.py`
 
 ### Rodando com Docker (Recomendado)
@@ -60,7 +60,7 @@ O painel ficará disponível em `http://localhost:8005` (ou na porta configurada
 
 ## 📁 Estrutura do Projeto
 
-- `app.py`: API e interface web (painel administrativo).
+- `main.py`: API e interface web (painel administrativo).
 - `manager.py`: Ponto de entrada para os bots; inicia as instâncias ativas.
 - `worker.py`: Lógica principal de processamento de mensagens e tarefas.
 - `database.py`: Definição de modelos e esquemas de dados.
