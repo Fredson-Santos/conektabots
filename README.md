@@ -1,69 +1,79 @@
-# ConektaBots
+# ConektaBots 🚀
 
-ConektaBots é uma plataforma para gerenciamento e automação de bots do Telegram, com interface web para administração de bots, regras de encaminhamento, agendamentos e monitoramento de execuções.
+ConektaBots é uma plataforma robusta para gerenciamento e automação de bots do Telegram. Com uma interface web intuitiva, você pode administrar múltiplos bots, configurar regras de encaminhamento complexas, agendar postagens e monitorar tudo em tempo real.
 
-## Funcionalidades
-- Cadastro e gerenciamento de múltiplos bots do Telegram (userbot ou bot API)
-- Criação de regras de encaminhamento entre canais/grupos
-- Agendamento de tarefas
-- Logs de execução e monitoramento
-- Interface web com FastAPI e Jinja2
+## ✨ Funcionalidades
 
-## Estrutura do Projeto
-```
-adicionar_bot.py         # Script CLI para adicionar bots ao banco
-adicionar_regra.py       # Script CLI para adicionar regras de encaminhamento
-app.py                   # API e interface web (FastAPI)
-database.py              # Modelos e conexão com banco de dados (SQLModel)
-manager.py               # Gerenciador principal: inicia todos os bots ativos
-populardb.py             # Script para popular o banco com dados de exemplo
-worker.py                # Worker assíncrono que executa os bots e regras
-requirements.txt         # Dependências do projeto
-bots/                    # (Pasta reservada para arquivos de bots)
-templates/               # Templates HTML (Jinja2)
-```
+- **Gestão de Múltiplos Bots**: Suporte para Userbots (contas pessoais) e Bots API.
+- **Regras de Encaminhamento Inteligentes**:
+  - Filtros por **Whitelist** e **Blacklist** de palavras.
+  - **Substituição de Texto** automática em mensagens encaminhadas.
+  - Toggles individuais para ativar/desativar regras rapidamente.
+- **Agendamentos**: Planeje postagens para canais e grupos com suporte a mídias.
+- **Painel Administrativo**: Interface web moderna construída com FastAPI e Jinja2.
+- **Monitoramento**: Logs detalhados de execução e histórico de tarefas.
+- **Resiliência**: Gerenciamento automático de sessões e reconexão.
 
-## Como rodar o projeto
+## 🛠️ Tecnologias Principais
 
-1. **Instale as dependências:**
+- **Backend**: Python 3.10+, FastAPI
+- **Bot Framework**: Telethon (Telegram MTProto)
+- **Banco de Dados**: SQLModel (SQLAlchemy) + SQLite
+- **Migrações**: Alembic
+- **Template Engine**: Jinja2
+- **Containerização**: Docker & Docker Compose
+
+## 🚀 Como Começar
+
+### Pré-requisitos
+- Python 3.10 ou superior
+- Docker (opcional, recomendado para deploy)
+
+### Instalação Manual
+
+1. **Clone o repositório e instale as dependências:**
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Configure o banco de dados:**
-   O projeto utiliza SQLite por padrão. Os modelos são criados automaticamente ao rodar os scripts.
+2. **Configure as variáveis de ambiente:**
+   Copie o arquivo `.env.example` para `.env` e ajuste conforme necessário.
 
-3. **Adicione um bot:**
+3. **Inicie o Banco de Dados (Migrações):**
    ```bash
-      pip install -r requirements.txt
-
-   ```
-   Siga as instruções para cadastrar um bot (userbot ou bot API).
-
-4. **Adicione regras de encaminhamento:**
-   ```bash
-   python adicionar_regra.py
+   alembic upgrade head
    ```
 
-5. **Inicie o sistema de bots:**
-   ```bash
-   python manager.py
-   ```
+4. **Inicie os serviços:**
+   - **Painel Web:** `uvicorn app:app --reload`
+   - **Gerenciador de Bots:** `python manager.py`
 
-6. **(Opcional) Rode a interface web:**
-   ```bash
-   uvicorn app:app --reload
-   ```
-   Acesse: http://localhost:8000
+### Rodando com Docker (Recomendado)
 
-## Principais Tecnologias
-- Python 3.10+
-- FastAPI
-- SQLModel
-- Telethon
-- Jinja2
+A maneira mais fácil de rodar o ConektaBots é via Docker Compose:
 
-## Observações
-- O arquivo `populardb.py` pode ser usado para inserir dados de exemplo no banco.
-- Os templates HTML estão na pasta `templates/`.
-- O projeto é modular e pode ser expandido para novas funcionalidades.
+```bash
+docker-compose up -d --build
+```
+
+O painel ficará disponível em `http://localhost:8005` (ou na porta configurada no seu `.env`).
+
+## 📁 Estrutura do Projeto
+
+- `app.py`: API e interface web (painel administrativo).
+- `manager.py`: Ponto de entrada para os bots; inicia as instâncias ativas.
+- `worker.py`: Lógica principal de processamento de mensagens e tarefas.
+- `database.py`: Definição de modelos e esquemas de dados.
+- `alembic/`: Gerenciamento de versões do banco de dados.
+- `templates/`: Interface visual do sistema.
+
+## 📝 Notas de Desenvolvimento
+
+- Utilize o script `adicionar_bot.py` via CLI caso prefira não usar a interface web inicialmente.
+- Atas de migração devem ser criadas sempre que houver mudanças no arquivo `database.py` usando:
+  ```bash
+  alembic revision --autogenerate -m "descrição da mudança"
+  ```
+
+---
+Desenvolvido para automação eficiente e escalável no Telegram.
