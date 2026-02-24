@@ -3,7 +3,7 @@ services:
   web:
     build: .
     container_name: conekta_web
-    command: sh -c "alembic upgrade head && uvicorn app:app --host 0.0.0.0 --port 8000"
+    command: uvicorn app:app --host 0.0.0.0 --port 8000
     volumes:
       - conekta_data:/app/data
     ports:
@@ -22,7 +22,7 @@ services:
   manager:
     build: .
     container_name: conekta_manager
-    command: sh -c "alembic upgrade head && python manager.py"
+    command: python manager.py
     volumes:
       - conekta_data:/app/data
     environment:
