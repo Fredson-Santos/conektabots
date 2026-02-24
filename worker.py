@@ -1,10 +1,11 @@
 import asyncio
 import random
+from typing import Optional, List
 from datetime import datetime
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from sqlmodel import Session, select
-from database import engine, Regra, LogExecucao, Agendamento, Configuracao
+from database import engine, Bot, Regra, LogExecucao, Agendamento, Configuracao
 import re
 import requests
 import hashlib
@@ -31,7 +32,7 @@ class ShopeeAPI:
         auth_h = f"SHA256 Credential={self.app_id}, Timestamp={ts}, Signature={sig}"
         return {"Authorization": auth_h, "Content-Type": "application/json"}
 
-    def gen_link(self, url: str) -> str:
+    def gen_link(self, url: str) -> Optional[str]:
         sub_ids = ["conekta", "bot"] 
         gq = {"query": f'''mutation {{ generateShortLink(input: {{ originUrl: "{url}", subIds: {json.dumps(sub_ids)} }}) {{ shortLink }} }}'''}
         payload = json.dumps(gq)
@@ -109,6 +110,8 @@ class BotWorker:
         self.api_id = db_bot.api_id
         self.api_hash = db_bot.api_hash
         self.session_string = db_bot.session_string
+        self.tipo = db_bot.tipo
+        self.bot_token = db_bot.bot_token
         self.client = None
         self.fila_envio = asyncio.Queue()
         self.handlers_ativos = [] 
@@ -363,9 +366,31 @@ class BotWorker:
         try:
             self.client = TelegramClient(StringSession(self.session_string), self.api_id, self.api_hash)
             await self.client.connect()
+            
             if not await self.client.is_user_authorized():
-                print(f"❌ {self.nome} não autorizado!")
-                return
+                if self.tipo == "bot" and self.bot_token:
+                    print(f"   🔑 [{self.nome}] Sessão expirada/inválida. Tentando login com Token...")
+                    try:
+                        await self.client.start(bot_token=self.bot_token)
+                        self.session_string = self.client.session.save()
+                        
+                        # Atualiza no banco para o próximo restart ser mais rápido
+                        with Session(engine) as session:
+                            db_bot = session.get(Bot, self.bot_id)
+                            if db_bot:
+                                db_bot.session_string = self.session_string
+                                session.add(db_bot)
+                                session.commit()
+                        print(f"   ✅ [{self.nome}] Login via Token realizado e sessão salva.")
+                    except Exception as e:
+                        print(f"   ❌ Erro ao logar com token: {e}")
+                        self.registrar_log("Sistema", "Interno", "Erro", f"Bot não autorizado e erro no token: {e}")
+                        return
+                else:
+                    print(f"❌ {self.nome} não autorizado!")
+                    self.registrar_log("Sistema", "Interno", "Erro", "Bot/Userbot não autorizado - sessão expirada?")
+                    return
+            
             me = await self.client.get_me()
             print(f"✅ {self.nome} conectado (@{me.username})")
             
@@ -375,7 +400,8 @@ class BotWorker:
 
             await self.client.run_until_disconnected()
         except Exception as e:
-            print(f"❌ Erro crítico: {e}")
+            print(f"❌ Erro crítico em {self.nome}: {e}")
+            self.registrar_log("Sistema", "Interno", "Erro Crítico", str(e))
 
     async def stop(self):
         if self.client:
