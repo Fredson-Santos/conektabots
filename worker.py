@@ -4,8 +4,48 @@ from datetime import datetime
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from sqlmodel import Session, select
-from database import engine, Regra, LogExecucao, Agendamento
+from database import engine, Regra, LogExecucao, Agendamento, Configuracao
 import re
+import requests
+import hashlib
+import json
+import time
+
+
+# --- CLASSE API SHOPEE ---
+class ShopeeAPI:
+    def __init__(self, app_id: str, secret: str):
+        self.app_id = app_id
+        self.secret = secret
+        self.base_url = "https://open-api.affiliate.shopee.com.br"
+        self.endpoint = "/graphql"
+
+    def _gen_sig(self, payload: str) -> tuple[str, str]:
+        ts = str(int(time.time()))
+        msg = f"{self.app_id}{ts}{payload}{self.secret}"
+        sig = hashlib.sha256(msg.encode('utf-8')).hexdigest()
+        return sig, ts
+
+    def _auth_header(self, payload: str):
+        sig, ts = self._gen_sig(payload)
+        auth_h = f"SHA256 Credential={self.app_id}, Timestamp={ts}, Signature={sig}"
+        return {"Authorization": auth_h, "Content-Type": "application/json"}
+
+    def gen_link(self, url: str) -> str:
+        sub_ids = ["conekta", "bot"] 
+        gq = {"query": f'''mutation {{ generateShortLink(input: {{ originUrl: "{url}", subIds: {json.dumps(sub_ids)} }}) {{ shortLink }} }}'''}
+        payload = json.dumps(gq)
+        headers = self._auth_header(payload)
+        try:
+            resp = requests.post(f"{self.base_url}{self.endpoint}", headers=headers, json=gq, timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                link = data.get("data", {}).get("generateShortLink", {}).get("shortLink")
+                if link: return link
+                else: print(f"   ⚠️ [Shopee] API 200 sem link: {data}")
+            else: print(f"   ⚠️ [Shopee] Erro {resp.status_code}: {resp.text}")
+        except Exception as e: print(f"   ❌ [Shopee] Exceção: {e}")
+        return None
 
 class BotWorker:
     def __init__(self, db_bot):
@@ -18,8 +58,44 @@ class BotWorker:
         self.fila_envio = asyncio.Queue()
         self.handlers_ativos = [] 
         self.hash_regras_atual = "" 
+        
+        self.current_shopee_id = None
+        self.current_shopee_secret = None
+        self.shopee = None
+        
+        # Inicializa buscando do banco global
+        self.atualizar_credenciais_sync()
 
     # --- FUNÇÕES AUXILIARES ---
+    def atualizar_credenciais_sync(self):
+        try:
+            with Session(engine) as session:
+                config = session.exec(select(Configuracao)).first()
+                if config and config.shopee_app_id and config.shopee_app_secret:
+                    self.current_shopee_id = config.shopee_app_id
+                    self.current_shopee_secret = config.shopee_app_secret
+                    self.shopee = ShopeeAPI(self.current_shopee_id, self.current_shopee_secret)
+                    print(f"   ✅ [{self.nome}] API Shopee carregada (Global).")
+                else:
+                    self.shopee = None
+        except Exception as e:
+            print(f"   ❌ Erro lendo config Shopee: {e}")
+
+    async def atualizar_credenciais_loop(self):
+        try:
+            with Session(engine) as session:
+                config = session.exec(select(Configuracao)).first()
+                novo_id = config.shopee_app_id if config else None
+                novo_secret = config.shopee_app_secret if config else None
+
+                if (novo_id != self.current_shopee_id) or (novo_secret != self.current_shopee_secret):
+                    print(f"🔄 [{self.nome}] Configuração Shopee mudou. Atualizando...")
+                    self.current_shopee_id = novo_id
+                    self.current_shopee_secret = novo_secret
+                    if novo_id and novo_secret: self.shopee = ShopeeAPI(novo_id, novo_secret)
+                    else: self.shopee = None
+        except Exception as e: print(f"❌ Erro Hot Reload Config Shopee: {e}")
+
     def processar_chat_id(self, chat_id):
         try:
             return int(chat_id)
@@ -56,6 +132,21 @@ class BotWorker:
                 self.registrar_log(log_origem, destino, "Erro", str(e))
             finally:
                 self.fila_envio.task_done()
+
+    # --- LÓGICA SHOPEE ---
+    async def converter_links_shopee(self, texto):
+        if not texto or not self.shopee: return texto
+        
+        regex = r'https?://(?:s\.)?shopee\.com(?:\.br)?/[^\s\)\]\"]+'
+        links = re.findall(regex, texto)
+        if not links: return texto
+        
+        novo_texto = texto
+        for link in links:
+            novo_link = await asyncio.to_thread(self.shopee.gen_link, link)
+            if novo_link:
+                novo_texto = novo_texto.replace(link, novo_link)
+        return novo_texto
 
     # --- FUNÇÃO CENTRAL DE PROCESSAMENTO ---
     def processar_mensagem(self, message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub):
@@ -109,7 +200,8 @@ class BotWorker:
             return [{"id": r.id, "origem": r.origem, "destino": r.destino, "nome": r.nome, 
                      "filtro": r.filtro, "substituto": r.substituto, 
                      "bloqueios": r.bloqueios,
-                     "somente_se_tiver": r.somente_se_tiver} for r in regras]
+                     "somente_se_tiver": r.somente_se_tiver,
+                     "converter_shopee": r.converter_shopee} for r in regras]
 
     async def aplicar_regras(self):
         regras = await self.carregar_regras()
@@ -132,8 +224,13 @@ class BotWorker:
             async def handler(event, d=destino, o=origem, r_nome=regra['nome'], 
                             r_filtro=regra['filtro'], r_sub=regra['substituto'], 
                             r_bloqueios=regra['bloqueios'],
-                            r_somente=regra['somente_se_tiver']):
+                            r_somente=regra['somente_se_tiver'],
+                            r_shopee=regra['converter_shopee']):
                 
+                # Conversão Shopee antes do processamento principal
+                if r_shopee:
+                    event.message.text = await self.converter_links_shopee(event.message.text)
+
                 msg_processada, erro = self.processar_mensagem(
                     event.message, r_nome, r_bloqueios, r_somente, r_filtro, r_sub
                 )
@@ -152,6 +249,7 @@ class BotWorker:
     async def monitorar_regras_loop(self):
         while True:
             try:
+                await self.atualizar_credenciais_loop()
                 await self.aplicar_regras()
             except Exception as e:
                 print(f"❌ Erro Hot Reload: {e}")

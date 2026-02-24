@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Configurações - Conekta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-10">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-5 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800">⚙️ Configurações Globais</h1>
+            <a href="/" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">⬅ Voltar</a>
+        </div>
+
+        <div class="bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold text-orange-600 mb-6 flex items-center">
+                <span class="mr-2">🛍️</span> API Shopee (Afiliados)
+            </h2>
+
+            <form action="/configuracoes/salvar" method="post" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">App ID</label>
+                    <input type="text" name="shopee_app_id" value="{{ config.shopee_app_id if config else '' }}"
+                        placeholder="Ex: 123456789"
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-3 border">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">App Secret</label>
+                    <input type="password" name="shopee_app_secret"
+                        value="{{ config.shopee_app_secret if config else '' }}"
+                        placeholder="Sua chave secreta da API Shopee"
+                        class="mt-1 block w-full rounded border-gray-300 bg-gray-50 p-3 border">
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded border border-blue-200 text-sm text-blue-800">
+                    <p><strong>💡 Onde conseguir?</strong></p>
+                    <p>Você encontra essas credenciais no <a href="https://affiliate.shopee.com.br/" target="_blank"
+                            class="underline font-bold">Portal de Afiliados da Shopee</a>, na seção de Console de API.
+                    </p>
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded">
+                    💾 Salvar Configurações
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

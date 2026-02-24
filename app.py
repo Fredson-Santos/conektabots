@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
-from database import engine, Bot, Regra, LogExecucao, Agendamento, create_db_and_tables
+from database import engine, Bot, Regra, LogExecucao, Agendamento, Configuracao, create_db_and_tables
 
 # Cache temporário de login
 TEMP_CLIENTS = {}
@@ -26,7 +26,41 @@ def get_session():
 async def dashboard(request: Request, session: Session = Depends(get_session)):
     bots = session.exec(select(Bot)).all()
     logs = session.exec(select(LogExecucao).order_by(LogExecucao.data_hora.desc()).limit(10)).all()
-    return templates.TemplateResponse("index.html", {"request": request, "bots": bots, "logs": logs})
+    
+    # Verifica se tem configuração da Shopee
+    config = session.exec(select(Configuracao)).first()
+    aviso_shopee = False
+    if not config or not config.shopee_app_id:
+        aviso_shopee = True
+        
+    return templates.TemplateResponse("index.html", {
+        "request": request, "bots": bots, "logs": logs, "aviso_shopee": aviso_shopee
+    })
+
+# --- CONFIGURAÇÕES GLOBAIS ---
+
+@app.get("/configuracoes", response_class=HTMLResponse)
+async def ver_configuracoes(request: Request, session: Session = Depends(get_session)):
+    config = session.exec(select(Configuracao)).first()
+    return templates.TemplateResponse("configuracoes.html", {"request": request, "config": config})
+
+@app.post("/configuracoes/salvar")
+async def salvar_configuracoes(
+    shopee_app_id: str = Form(""),
+    shopee_app_secret: str = Form(""),
+    session: Session = Depends(get_session)
+):
+    config = session.exec(select(Configuracao)).first()
+    if not config:
+        config = Configuracao(shopee_app_id=shopee_app_id, shopee_app_secret=shopee_app_secret)
+        session.add(config)
+    else:
+        config.shopee_app_id = shopee_app_id
+        config.shopee_app_secret = shopee_app_secret
+        session.add(config)
+    
+    session.commit()
+    return RedirectResponse(url="/", status_code=303)
 
 # --- GESTÃO DE BOTS (NOVO) ---
 
@@ -73,6 +107,15 @@ async def deletar_bot(id: int, session: Session = Depends(get_session)):
         # Nota: Ao deletar o bot, as regras e agendamentos filhos podem ficar órfãos ou dar erro
         # dependendo do banco. O ideal seria deletar tudo em cascata, mas vamos deletar o bot por enquanto.
         session.delete(bot)
+        session.commit()
+    return RedirectResponse(url="/", status_code=303)
+
+@app.get("/bots/toggle/{id}")
+async def toggle_bot(id: int, session: Session = Depends(get_session)):
+    bot = session.get(Bot, id)
+    if bot:
+        bot.ativo = not bot.ativo
+        session.add(bot)
         session.commit()
     return RedirectResponse(url="/", status_code=303)
 
@@ -241,14 +284,25 @@ async def listar_regras(request: Request, session: Session = Depends(get_session
 async def criar_regra(
     nome: str = Form(...), origem: str = Form(...), destino: str = Form(...), bot_id: int = Form(...),
     filtro: str = Form(None), substituto: str = Form(None), bloqueios: str = Form(None), somente_se_tiver: str = Form(None),
+    converter_shopee: bool = Form(False),
     session: Session = Depends(get_session)
 ):
     nova_regra = Regra(
         nome=nome, origem=origem, destino=destino, bot_id=bot_id,
-        filtro=filtro, substituto=substituto, bloqueios=bloqueios, somente_se_tiver=somente_se_tiver, ativo=True
+        filtro=filtro, substituto=substituto, bloqueios=bloqueios, somente_se_tiver=somente_se_tiver, 
+        converter_shopee=converter_shopee, ativo=True
     )
     session.add(nova_regra)
     session.commit()
+    return RedirectResponse(url="/regras", status_code=303)
+
+@app.get("/regras/toggle/{id}")
+async def toggle_regra(id: int, session: Session = Depends(get_session)):
+    regra = session.get(Regra, id)
+    if regra:
+        regra.ativo = not regra.ativo
+        session.add(regra)
+        session.commit()
     return RedirectResponse(url="/regras", status_code=303)
 
 @app.get("/regras/deletar/{id}")
@@ -276,6 +330,7 @@ async def atualizar_regra(
     substituto: str = Form(None),
     bloqueios: str = Form(None), 
     somente_se_tiver: str = Form(None),
+    converter_shopee: bool = Form(False),
     session: Session = Depends(get_session)
 ):
     regra = session.get(Regra, id)
@@ -288,6 +343,7 @@ async def atualizar_regra(
         regra.substituto = substituto
         regra.bloqueios = bloqueios
         regra.somente_se_tiver = somente_se_tiver
+        regra.converter_shopee = converter_shopee
         session.add(regra)
         session.commit()
     return RedirectResponse(url="/regras", status_code=303)

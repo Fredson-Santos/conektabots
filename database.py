@@ -2,6 +2,12 @@ from typing import Optional, List
 from datetime import datetime
 from sqlmodel import Field, SQLModel, create_engine, Relationship
 
+# --- MODELO CONFIGURAÇÃO (GLOBAL) ---
+class Configuracao(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    shopee_app_id: Optional[str] = None
+    shopee_app_secret: Optional[str] = None
+
 # --- MODELO BOT ---
 class Bot(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -14,8 +20,8 @@ class Bot(SQLModel, table=True):
     session_string: Optional[str] = None
     ativo: bool = Field(default=True)
     
-    regras: List["Regra"] = Relationship(back_populates="bot")
-    agendamentos: List["Agendamento"] = Relationship(back_populates="bot")
+    regras: List["Regra"] = Relationship(back_populates="bot", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    agendamentos: List["Agendamento"] = Relationship(back_populates="bot", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 # --- MODELO REGRA ---
 class Regra(SQLModel, table=True):
@@ -28,7 +34,8 @@ class Regra(SQLModel, table=True):
     filtro: Optional[str] = None
     substituto: Optional[str] = None
     bloqueios: Optional[str] = None         # Blacklist (Se tiver, NÃO envia)
-    somente_se_tiver: Optional[str] = None  # Whitelist (SÓ envia se tiver) <--- NOVO
+    somente_se_tiver: Optional[str] = None  # Whitelist (SÓ envia se tiver)
+    converter_shopee: bool = Field(default=False)
     
     bot_id: int = Field(foreign_key="bot.id")
     bot: Optional[Bot] = Relationship(back_populates="regras")
