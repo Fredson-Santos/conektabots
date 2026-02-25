@@ -95,7 +95,25 @@ def aplicar_processamento_mensagem(message, nome_referencia, r_bloqueios, r_some
         # 3. Substituição
         if texto_msg and r_filtro and r_sub:
             try:
-                message.text = re.sub(r_filtro, r_sub, texto_msg, flags=re.IGNORECASE)
+                termos_filtro = [t.strip() for t in r_filtro.split(',')]
+                termos_sub = [t.strip() for t in r_sub.split(',')]
+                
+                # Se houver múltiplos filtros e apenas um substituto, usa o mesmo substituto para todos
+                if len(termos_filtro) > 1 and len(termos_sub) == 1:
+                    termos_sub = termos_sub * len(termos_filtro)
+                
+                # Processa cada par filtro/substituto
+                # Usamos min() para evitar IndexError se r_sub tiver menos itens que r_filtro (e não for 1)
+                for i in range(min(len(termos_filtro), len(termos_sub))):
+                    filtro = termos_filtro[i]
+                    sub = termos_sub[i]
+                    if not filtro: continue
+                    
+                    # Usa \b para garantir que a palavra seja exata (evita substituir 'canal1' em 'canal10')
+                    pattern = rf'\b{re.escape(filtro)}\b'
+                    texto_msg = re.sub(pattern, sub, texto_msg, flags=re.IGNORECASE)
+                
+                message.text = texto_msg
             except Exception as e:
                 print(f"   ❌ Erro Regex sub: {e}")
         
