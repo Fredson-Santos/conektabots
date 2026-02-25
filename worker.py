@@ -401,8 +401,13 @@ class BotWorker:
 
             await self.client.run_until_disconnected()
         except Exception as e:
-            print(f"❌ Erro crítico em {self.nome}: {e}")
-            self.registrar_log("Sistema", "Interno", "Erro Crítico", str(e))
+            err_msg = str(e)
+            if "Constructor ID" in err_msg or "94345242" in err_msg:
+                print(f"   ⚠️ [{self.nome}] Erro de Protocolo (Constructor ID). Provavelmente requer atualização do Telethon.")
+                self.registrar_log("Sistema", "Interno", "Erro Protocolo", "Telegram enviou objeto desconhecido. Atualize o Telethon.")
+            else:
+                print(f"❌ Erro crítico em {self.nome}: {e}")
+                self.registrar_log("Sistema", "Interno", "Erro Crítico", err_msg)
 
     async def stop(self):
         if self.client:

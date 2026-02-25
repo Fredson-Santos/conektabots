@@ -1,7 +1,7 @@
 sqlmodel
 fastapi
 uvicorn
-telethon
+telethon>=1.38.1
 python-dotenv
 jinja2
 python-multipart
