@@ -135,6 +135,7 @@ class BotWorker:
         self.fila_envio = asyncio.Queue()
         self.handlers_ativos = [] 
         self.hash_regras_atual = "" 
+        self.buffer_albuns = {} # {grouped_id: [mensagens]}
         
         self.current_shopee_id = None
         self.current_shopee_secret = None
@@ -212,11 +213,17 @@ class BotWorker:
             # Garante que destinos seja uma lista
             if not isinstance(destinos, list):
                 destinos = [destinos]
-            
             for d in destinos:
                 try:
-                    await self.client.send_message(d, mensagem_original)
-                    msg_log = f"'{regra_nome}': Enviada para {d} (Restam {self.fila_envio.qsize()})"
+                    if isinstance(mensagem_original, list):
+                        # Envio de Álbum (Grouped Messages)
+                        await self.client.send_file(d, mensagem_original)
+                        msg_log = f"'{regra_nome}': Álbum enviado para {d} (Restam {self.fila_envio.qsize()})"
+                    else:
+                        # Envio individual
+                        await self.client.send_message(d, mensagem_original)
+                        msg_log = f"'{regra_nome}': Enviada para {d} (Restam {self.fila_envio.qsize()})"
+                    
                     print(f"   🚀 [{self.nome}] {msg_log}")
                     self.registrar_log(log_origem, d, "Sucesso", msg_log)
                     
@@ -229,6 +236,16 @@ class BotWorker:
             # Delay entre itens da fila
             await asyncio.sleep(random.uniform(2.0, 5.0))
             self.fila_envio.task_done()
+
+    # --- TAREFA 1.1: PROCESSADOR DE ÁLBUNS ---
+    async def processar_album_buffer(self, gid, destinos, regra_nome, log_origem):
+        """Aumenta a espera para garantir que todas as partes do álbum cheguem."""
+        await asyncio.sleep(2.0) # Espera 2 segundos para o álbum completar
+        if gid in self.buffer_albuns:
+            mensagens = self.buffer_albuns.pop(gid)
+            if mensagens:
+                # Coloca a lista de mensagens na fila para envio como álbum
+                await self.fila_envio.put((destinos, mensagens, regra_nome, log_origem))
 
     # --- LÓGICA SHOPEE ---
     async def converter_links_shopee(self, texto):
@@ -296,9 +313,21 @@ class BotWorker:
                 )
                 
                 if msg_processada:
-                    print(f"   📥 [{self.nome}] Recebido. Fila...")
-                    # Passa a lista de destinos e a primeira origem como referência de log
-                    await self.fila_envio.put( (d, msg_processada, r_nome, o[0]) )
+                    # Lógica de Álbum (mensagens agrupadas)
+                    if event.grouped_id:
+                        gid = event.grouped_id
+                        if gid not in self.buffer_albuns:
+                            self.buffer_albuns[gid] = []
+                            # Agenda o envio do álbum após 2 segundos (tempo para coletar todas as mídias)
+                            asyncio.create_task(self.processar_album_buffer(gid, d, r_nome, o[0]))
+                        
+                        self.buffer_albuns[gid].append(msg_processada)
+                        print(f"   📥 [{self.nome}] Parte de álbum ({gid}) recebida.")
+                    else:
+                        # Mensagem individual
+                        print(f"   📥 [{self.nome}] Recebido. Fila...")
+                        # Passa a lista de destinos e a primeira origem como referência de log
+                        await self.fila_envio.put( (d, msg_processada, r_nome, o[0]) )
                 elif erro and "BLOQUEADO" in erro:
                     self.registrar_log(o[0], d[0], "BLOQUEADO", erro)
 
@@ -349,16 +378,35 @@ class BotWorker:
                                             continue
                                         break
 
+                                    # Lógica de Álbum no Agendamento
+                                    if msg.grouped_id:
+                                        # Busca o álbum completo (range de ids próximos)
+                                        album_msgs = await self.client.get_messages(origem_id, min_id=msg.id-12, max_id=msg.id+12)
+                                        msg_final = [m for m in album_msgs if m.grouped_id == msg.grouped_id]
+                                        msg_final.sort(key=lambda x: x.id)
+                                        
+                                        # Para filtros, usamos a mensagem que contém o texto (legenda)
+                                        msg_referencia = next((m for m in msg_final if m.text), msg_final[0])
+                                    else:
+                                        msg_final = msg
+                                        msg_referencia = msg
+
                                     # Aplica filtros e transformações
                                     msg_proc, erro = aplicar_processamento_mensagem(
-                                        msg, ag.nome, ag.bloqueios, ag.somente_se_tiver,
+                                        msg_referencia, ag.nome, ag.bloqueios, ag.somente_se_tiver,
                                         ag.filtro, ag.substituto, ag.filtro_midia
                                     )
                                     
                                     if msg_proc:
-                                        await self.fila_envio.put((destinos, msg_proc, f"Agenda: {ag.nome}", origem_id))
+                                        # Se for álbum, o objeto enviado é a lista msg_final
+                                        item_envio = msg_final if isinstance(msg_final, list) else msg_proc
+                                        await self.fila_envio.put((destinos, item_envio, f"Agenda: {ag.nome}", origem_id))
+                                        
                                         if ag.tipo_envio == "sequencial":
-                                            ag.msg_id_atual += 1
+                                            if isinstance(msg_final, list):
+                                                ag.msg_id_atual = max([m.id for m in msg_final]) + 1
+                                            else:
+                                                ag.msg_id_atual += 1
                                         break
                                     else:
                                         # Foi bloqueado por filtro
@@ -367,7 +415,11 @@ class BotWorker:
                                         
                                         if ag.tipo_envio == "sequencial":
                                             print(f"      ⏭️  ID {ag.msg_id_atual} bloqueado. Pulando para o próximo...")
-                                            ag.msg_id_atual += 1
+                                            if isinstance(msg_final, list):
+                                                ag.msg_id_atual = max([m.id for m in msg_final]) + 1
+                                            else:
+                                                ag.msg_id_atual += 1
+                                            continue
                                         else:
                                             break
                                 
