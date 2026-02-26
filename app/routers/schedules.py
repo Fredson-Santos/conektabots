@@ -134,21 +134,41 @@ async def enviar_agendamento_agora(id: int, session: Session = Depends(get_sessi
         
         try:
             await client.get_entity(origem_id)
+            for d in destinos:
+                await client.get_entity(d)
         except Exception as e:
-            print(f"⚠️ Aviso: Falha ao resolver entidade {origem_id}: {e}")
+            print(f"⚠️ Aviso: Falha ao resolver entidades: {e}")
         
         msg = await client.get_messages(origem_id, ids=ag.msg_id_atual)
         if msg:
+            # Lógica de Álbum no Envio Manual
+            if msg.grouped_id:
+                # Busca o álbum completo (range de ids próximos)
+                album_msgs = await client.get_messages(origem_id, min_id=msg.id-15, max_id=msg.id+15)
+                msg_final = [m for m in album_msgs if m.grouped_id == msg.grouped_id]
+                msg_final.sort(key=lambda x: x.id)
+                msg_referencia = next((m for m in msg_final if m.text), msg_final[0])
+            else:
+                msg_final = msg
+                msg_referencia = msg
+
             msg_proc, erro_proc = aplicar_processamento_mensagem(
-                msg, ag.nome, ag.bloqueios, ag.somente_se_tiver, 
+                msg_referencia, ag.nome, ag.bloqueios, ag.somente_se_tiver, 
                 ag.filtro, ag.substituto, ag.filtro_midia
             )
             
             if msg_proc:
                 for d in destinos:
-                    await client.send_message(d, msg_proc)
+                    if isinstance(msg_final, list):
+                        await client.send_file(d, msg_final)
+                    else:
+                        await client.send_message(d, msg_proc)
                 
-                ag.msg_id_atual += 1
+                if isinstance(msg_final, list):
+                    ag.msg_id_atual = max([m.id for m in msg_final]) + 1
+                else:
+                    ag.msg_id_atual += 1
+                
                 session.add(ag)
                 
                 log = LogExecucao(
