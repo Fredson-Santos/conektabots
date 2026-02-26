@@ -49,7 +49,7 @@ ConektaBots é uma plataforma robusta e elegante para gerenciamento e automaçã
    ```
 
 4. **Inicie os serviços:**
-   - **Painel Web:** `uvicorn main:app --host 0.0.0.0 --port 8000 --reload`
+   - **Painel Web:** `uvicorn main:app --host 127.0.0.1 --port 8000 --reload`
    - **Gerenciador de Bots:** `python manager.py`
 
 ### Rodando com Docker (Recomendado)
