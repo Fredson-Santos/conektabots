@@ -366,6 +366,14 @@ class BotWorker:
                             
                             origem_id = origens[0]
                             try:
+                                # Tenta resolver as entidades (origem e destinos) para garantir que o Telethon tenha os access_hashes
+                                try:
+                                    await self.client.get_entity(origem_id)
+                                    for d in destinos:
+                                        await self.client.get_entity(d)
+                                except Exception as ee:
+                                    print(f"      ⚠️ Aviso na resolução de entidades: {ee}")
+
                                 # Lógica de Pular Bloqueados (Somente para Sequencial)
                                 max_tentativas = 10 if ag.tipo_envio == "sequencial" else 1
                                 for tentativa in range(max_tentativas):
@@ -381,7 +389,7 @@ class BotWorker:
                                     # Lógica de Álbum no Agendamento
                                     if msg.grouped_id:
                                         # Busca o álbum completo (range de ids próximos)
-                                        album_msgs = await self.client.get_messages(origem_id, min_id=msg.id-12, max_id=msg.id+12)
+                                        album_msgs = await self.client.get_messages(origem_id, min_id=msg.id-20, max_id=msg.id+20)
                                         msg_final = [m for m in album_msgs if m.grouped_id == msg.grouped_id]
                                         msg_final.sort(key=lambda x: x.id)
                                         
