@@ -74,5 +74,5 @@ O painel ficará disponível em `http://localhost:8000` (ou na porta configurada
 - `alembic/`: Scripts de migração do banco de dados.
 
 ---
-Desenvolvido para automação eficiente e escalável no Telegram.
+Desenvolvido para automação eficiente e escalável no Telegram
 
