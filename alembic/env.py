@@ -11,7 +11,7 @@ from alembic import context
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
 from sqlmodel import SQLModel
-from app.core.database import sqlite_file_name
+from app.core.database import database_url
 from app.models import Agendamento, Bot, Regra, LogExecucao, Configuracao
 
 # this is the Alembic Config object, which provides
@@ -27,8 +27,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = SQLModel.metadata
 
-# Força a URL do SQLite vinda do database.py
-database_url = f"sqlite:///{sqlite_file_name}"
+# Força a URL do PostgreSQL vinda do database.py
 config.set_main_option("sqlalchemy.url", database_url)
 
 # other values from the config, defined by the needs of env.py,
@@ -55,7 +54,6 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -79,7 +77,6 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection, 
             target_metadata=target_metadata,
-            render_as_batch=True,
         )
 
         with context.begin_transaction():

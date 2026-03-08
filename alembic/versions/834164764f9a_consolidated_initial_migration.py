@@ -31,7 +31,7 @@ def upgrade() -> None:
         sa.Column('bot_token', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column('tipo', sqlmodel.sql.sqltypes.AutoString(), nullable=False, server_default='user'),
         sa.Column('session_string', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column('ativo', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('ativo', sa.Boolean(), nullable=False, server_default=sa.text('true')),
     )
 
     op.create_table(
@@ -45,9 +45,9 @@ def upgrade() -> None:
         sa.Column('bloqueios', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column('somente_se_tiver', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column('filtro_midia', sqlmodel.sql.sqltypes.AutoString(), nullable=False, server_default=sa.text("'todos'")),
-        sa.Column('converter_shopee', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('converter_shopee', sa.Boolean(), nullable=False, server_default=sa.text('false')),
         sa.Column('bot_id', sa.Integer(), sa.ForeignKey('bot.id'), nullable=False),
-        sa.Column('ativo', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('ativo', sa.Boolean(), nullable=False, server_default=sa.text('true')),
     )
 
     op.create_table(
@@ -65,7 +65,7 @@ def upgrade() -> None:
         sa.Column('somente_se_tiver', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column('filtro_midia', sqlmodel.sql.sqltypes.AutoString(), nullable=False, server_default=sa.text("'todos'")),
         sa.Column('bot_id', sa.Integer(), sa.ForeignKey('bot.id'), nullable=False),
-        sa.Column('ativo', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('ativo', sa.Boolean(), nullable=False, server_default=sa.text('true')),
     )
 
     op.create_table(
