@@ -5,7 +5,7 @@
 **Target Completion**: 3-4 weeks  
 **Deployment**: Vercel  
 **Database**: PostgreSQL (local) + FastAPI JWT  
-**Status**: 📍 Foundation Phase Complete (A0-A2) | Next: B1 Auth Pages
+**Status**: 📍 CRUD Phase Kickoff (D1 Complete) | 50% of total tasks done
 
 ---
 
@@ -16,14 +16,10 @@
 | **A0** | Reorganizar para monorepo (/backend + /frontend) | ✅ COMPLETE | Backend Dev | 1-2h | ✅ Estrutura pronta |
 | **A1** | Setup Next.js 15 + Auth Infrastructure | ✅ COMPLETE | Frontend Designer | 8-10h | → A0 ✅ |
 | **A2** | Backend Validation (CORS + Endpoints) | ✅ COMPLETE | Backend Dev | 3-4h | → A1 |
-| **B1** | Auth Pages (Login/Signup/Protected Routes) | ⏳ PENDING | Frontend Designer | 6-8h | → A1 ✅ |
-| **C1** | Dashboard Layout Base | ⏳ PENDING | Frontend Designer | 4-6h | → B1 |
-| **D1** | Bots Management CRUD | ⏳ PENDING | Frontend Designer | 6-8h | → C1 |
-| **D2** | Rules Management CRUD (Complex Form) | ⏳ PENDING | Frontend Designer | 10-12h | → C1 |
-| **D3** | Schedules Management CRUD (Complex Form) | ⏳ PENDING | Frontend Designer | 10-12h | → C1 |
-| **D4** | Marketplaces CRUD (Dynamic Forms) ⭐ | ⏳ PENDING | Frontend + Backend | 8-10h | → C1 |
-| **D5** | Logs Viewer (Table + Filters + Export) | ⏳ PENDING | Frontend Designer | 6-8h | → C1 |
-| **D6** | Settings & Account Management | ⏳ PENDING | Frontend Designer | 6-8h | → C1 |
+| **B1** | Auth Pages (Login/Signup/Protected Routes) | ✅ COMPLETE | Frontend Designer | 6-8h | → A1 ✅ |
+| **C1** | Dashboard Layout Base | ✅ COMPLETE | Frontend Designer | 4-6h | → B1 ✅ |
+| **D1** | Bots Management CRUD | ✅ COMPLETE | Frontend Designer | 6-8h | → C1 ✅ |
+| **D2-D6** | Remaining CRUD Pages | ⏳ PENDING | Frontend Designer | 50-60h | Parallelizable → C1 |
 | **E1** | Marketing Landing Page | ⏳ PENDING | Frontend Designer | 6-8h | // Paralelo com D |
 | **F1** | Polish & UX (Forms, Validation, Responsive) | ⏳ PENDING | Frontend Designer | 8-10h | → All Done |
 
