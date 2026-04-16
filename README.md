@@ -2,7 +2,45 @@
 
 **ConektaBots** é uma plataforma SaaS enterprise-grade para gerenciamento e automação de bots do Telegram. Com backend moderno em FastAPI e arquitetura multi-tenant, você pode administrar múltiplos bots, configurar regras inteligentes, agendar postagens e monitorar tudo em tempo real com segurança e escalabilidade.
 
-> 🔄 **Status Atual**: Fase 2 (Backend) ✅ 100% Completo | Próxima: Fase 3 (Frontend Next.js)
+> 🔄 **Status Atual**: Fase 2 (Backend) ✅ 100% Completo | Fase 3 (Frontend) 🔜 Em Progresso
+
+## 📁 Estrutura Monorepo
+
+```
+conektabots/
+├── backend/          ← FastAPI + SQLAlchemy (Python)
+│   ├── app/
+│   ├── worker/
+│   ├── tests/
+│   ├── alembic/
+│   ├── main.py
+│   ├── requirements.txt
+│   └── README.md     ← Instruções backend específicas
+│
+├── frontend/         ← Next.js 15 (TypeScript/React)
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── README.md     ← Instruções frontend específicas
+│
+├── .github/
+│   ├── workflows/    ← CI/CD pipelines
+│   ├── instructions/ ← Agentivated guidelines
+│   └── skills/
+│
+└── .project/
+    ├── phase3-tasks.md
+    ├── roadmap.md
+    └── state.md
+```
+
+**Por que Monorepo?**
+- ✅ Código compartilhado simples (tipos, schemas)
+- ✅ CI/CD integrado para backend + frontend
+- ✅ Deploy coordenado (ambos versionados juntos)
+- ✅ Dependências claras (backend v1.0 ↔ frontend v1.0)
 
 ## ✨ Funcionalidades (Fase 2 - Backend)
 
@@ -61,11 +99,12 @@
 ### Frontend (Fase 3 🔜)
 | Componente | Tecnologia |
 |-----------|-----------|
-| **Framework** | Next.js 14+ |
+| **Framework** | Next.js 15+ |
 | **UI Library** | React 18+ |
 | **Styling** | Tailwind CSS 3+ |
-| **API Client** | React Query / SWR |
-| **Auth** | NextAuth.js |
+| **API Client** | Axios + interceptors |
+| **State Management** | Zustand |
+| **Auth** | JWT + localStorage (v1.0) → Supabase Auth (v1.1) |
 | **Deployment** | Vercel |
 
 ### DevOps (Fase 4 🔜)
@@ -80,36 +119,66 @@
 ## 🚀 Como Começar
 
 ### Pré-requisitos
-- Python 3.10+ (ou 3.14+ para máxima performance)
+- Python 3.10+ (backend)
+- Node.js 18+ (frontend)
 - PostgreSQL 16 (local ou Supabase)
-- Docker & Docker Compose (recomendado para produção)
+- Docker & Docker Compose (opcional, para produção)
 
-### Instalação Rápida (Desenvolvimento)
+### ⚡ Setup Desenvolvimento (Rápido)
 
-1. **Clone e instale dependências:**
-   ```bash
-   git clone https://github.com/seu-usuario/conektabots.git
-   cd conektabots
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+#### Backend Setup
+```bash
+cd conektabots/backend
+python -m venv venv
+source venv/Scripts/activate  # Windows: venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 
-2. **Configure o banco de dados:**
-   ```bash
-   # Opção A: PostgreSQL local
-   export DATABASE_URL=postgresql://user:password@localhost:5432/conektabots
-   
-   # Opção B: Supabase
-   export DATABASE_URL=postgresql://[user]:[password]@[host]:5432/[db]
-   ```
+# Configure .env
+cp .env.example .env
+# Edite .env com DATABASE_URL, JWT_SECRET, etc
 
-3. **Execute as migrações:**
-   ```bash
-   alembic upgrade head
-   ```
+# Execute migrações
+alembic upgrade head
 
-4. **Inicie o servidor FastAPI:**
+# Inicie servidor
+uvicorn main:app --reload --port 8000
+```
+
+Backend estará disponível em: **http://localhost:8000**  
+API Docs (Swagger UI): **http://localhost:8000/docs**
+
+#### Frontend Setup
+```bash
+cd conektabots/frontend
+npm install
+
+# Configure .env.local
+cp .env.local.example .env.local
+# Edite NEXT_PUBLIC_API_URL = http://localhost:8000
+
+# Inicie dev server
+npm run dev
+```
+
+Frontend estará disponível em: **http://localhost:3000**
+
+#### Com Docker Compose
+```bash
+cd conektabots
+docker-compose up -d
+
+# Backend: http://localhost:8000
+# Frontend: http://localhost:3000
+# PostgreSQL: localhost:5432
+```
+
+---
+
+### 📚 Documentação Detalhada
+
+**Backend Específico**:
+- [backend/README.md](backend/README.md) — API endpoints, schemas, services
+- [.project/phase3-tasks.md](.project/phase3-tasks.md) — Roadmap fase 3
    ```bash
    uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```

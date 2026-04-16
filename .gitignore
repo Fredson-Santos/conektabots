@@ -8,6 +8,7 @@ venv/
 ENV/
 env/
 .env
+backend/.env
 
 # Database
 database.db
@@ -28,3 +29,20 @@ Thumbs.db
 # Scripts to ignore
 populardb.py
 mvp-antigo/
+
+# Frontend (Node.js)
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/.env.*.local
+frontend/dist/
+frontend/out/
+
+# Backend venv in monorepo
+backend/venv/
+backend/ENV/
+backend/env/
+
+# IDE
+backend/.vscode/
+frontend/.vscode/
