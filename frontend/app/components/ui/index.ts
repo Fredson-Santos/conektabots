@@ -7,4 +7,4 @@ export { Alert, type AlertProps } from './Alert'
 export { EmptyState, type EmptyStateProps } from './EmptyState'
 
 // Icons
-export { SpinnerIcon } from './icons.tsx'
+export { SpinnerIcon } from './icons'

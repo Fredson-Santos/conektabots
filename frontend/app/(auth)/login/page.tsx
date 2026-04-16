@@ -71,16 +71,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-lg">
+    <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">ConektaBots</h1>
-        <p className="text-sm text-gray-600 mt-md">Sign in to your account</p>
+      <div className="text-center mb-2">
+        <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
+        <p className="text-sm text-gray-600 mt-1">Enter your credentials to continue</p>
       </div>
 
       {/* Form Card */}
-      <Card variant="default" className="p-lg">
-        <form onSubmit={handleSubmit} className="space-y-lg">
+      <Card variant="default" className="px-8 py-12">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Error Alert */}
           {apiError && (
             <Alert
@@ -108,7 +108,7 @@ export default function LoginPage() {
           />
 
           {/* Password Input with Show/Hide Toggle */}
-          <div>
+          <div className="relative">
             <Input
               label="Password"
               type={showPassword ? 'text' : 'password'}
@@ -126,20 +126,20 @@ export default function LoginPage() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               disabled={loading}
-              className="absolute right-md top-2xl text-gray-500 hover:text-gray-700 transition disabled:opacity-50"
+              className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 transition disabled:opacity-50"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? (
-                <EyeSlashIcon className="w-5 h-5" />
+                <EyeSlashIcon className="w-4 h-4" />
               ) : (
-                <EyeIcon className="w-5 h-5" />
+                <EyeIcon className="w-4 h-4" />
               )}
             </button>
           </div>
 
           {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-sm">
+          <div className="flex items-center justify-between pt-2">
+            <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={rememberMe}
@@ -152,7 +152,7 @@ export default function LoginPage() {
             </label>
             <Link
               href="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-700 transition"
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium transition"
             >
               Forgot password?
             </Link>
@@ -172,7 +172,7 @@ export default function LoginPage() {
         </form>
 
         {/* Sign Up Link */}
-        <div className="mt-lg pt-lg border-t border-gray-200 text-center">
+        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
             <Link href="/signup" className="text-blue-600 font-medium hover:text-blue-700 transition">
@@ -181,11 +181,6 @@ export default function LoginPage() {
           </p>
         </div>
       </Card>
-
-      {/* Footer */}
-      <p className="text-xs text-gray-500 text-center">
-        © 2026 ConektaBots. All rights reserved.
-      </p>
     </div>
   )
 }

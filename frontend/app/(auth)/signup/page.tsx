@@ -101,16 +101,16 @@ export default function SignupPage() {
   }, [formData.password])
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">ConektaBots</h1>
-        <p className="text-sm text-gray-600 mt-2">Create your account</p>
+      <div className="text-center mb-2">
+        <h1 className="text-2xl font-semibold text-gray-900">Create account</h1>
+        <p className="text-sm text-gray-600 mt-1">Join ConektaBots and automate your Telegram bots</p>
       </div>
 
       {/* Form Card */}
-      <Card variant="default" className="p-8">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <Card variant="default" className="px-8 py-12">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Error Alert */}
           {apiError && (
             <Alert
@@ -179,9 +179,9 @@ export default function SignupPage() {
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
-                  <EyeSlashIcon className="w-5 h-5" />
+                  <EyeSlashIcon className="w-4 h-4" />
                 ) : (
-                  <EyeIcon className="w-5 h-5" />
+                  <EyeIcon className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -202,14 +202,14 @@ export default function SignupPage() {
                   />
                 </div>
                 <p className="text-xs text-gray-400">
-                  Min. 8 chars, uppercase, number & special character (!@#$%^&*)
+                  Min. 8 characters, uppercase, number and special character (!@#$%^&*)
                 </p>
               </div>
             )}
           </div>
 
           {/* Terms Agreement */}
-          <label className="flex items-start gap-3 cursor-pointer">
+          <label className="flex items-start gap-2 cursor-pointer pt-2">
             <input
               id="agreeToTerms"
               type="checkbox"
@@ -219,7 +219,7 @@ export default function SignupPage() {
                 if (e.target.checked && apiError.includes('Terms')) setApiError('')
               }}
               disabled={loading}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-blue-600 cursor-pointer"
+              className="mt-1 h-4 w-4 rounded border-gray-300 accent-blue-600 cursor-pointer flex-shrink-0"
             />
             <span className="text-sm text-gray-700 leading-snug">
               I agree to the{' '}
@@ -264,11 +264,6 @@ export default function SignupPage() {
           </p>
         </div>
       </Card>
-
-      {/* Footer */}
-      <p className="text-xs text-gray-500 text-center">
-        © 2026 ConektaBots. All rights reserved.
-      </p>
     </div>
   )
 }

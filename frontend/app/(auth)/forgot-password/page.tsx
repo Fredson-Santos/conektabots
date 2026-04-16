@@ -53,18 +53,23 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="space-y-lg">
+    <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">ConektaBots</h1>
-        <p className="text-sm text-gray-600 mt-md">Reset your password</p>
+      <div className="text-center mb-2">
+        <Link
+          href="/login"
+          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 font-medium transition mb-3"
+        >
+          ← Back to sign in
+        </Link>
+        <h1 className="text-2xl font-semibold text-gray-900">Reset password</h1>
       </div>
 
       {/* Form Card */}
-      <Card variant="default" className="p-lg">
+      <Card variant="default" className="px-8 py-12">
         {success ? (
           // Success State
-          <div className="space-y-lg text-center">
+          <div className="space-y-6 text-center">
             <div className="flex justify-center">
               <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center">
                 <svg
@@ -84,21 +89,22 @@ export default function ForgotPasswordPage() {
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Check your email</h2>
-              <p className="text-sm text-gray-600 mt-md">
-                We've sent a password reset link to <span className="font-medium">{email}</span>
+              <h2 className="text-lg font-semibold text-gray-900">Check your inbox</h2>
+              <p className="text-sm text-gray-600 mt-2">
+                We've sent a password reset link to{' '}
+                <span className="font-medium text-gray-900">{email}</span>
               </p>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-md">
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <p className="text-sm text-blue-900">
                 Didn't receive the email? Check your spam folder or{' '}
                 <button
                   onClick={() => {
                     setSuccess(false)
                     setEmail('')
                   }}
-                  className="underline font-medium hover:text-blue-900 transition"
+                  className="underline font-medium hover:text-blue-800 transition"
                 >
                   try again
                 </button>
@@ -107,14 +113,14 @@ export default function ForgotPasswordPage() {
 
             <Link
               href="/login"
-              className="text-sm text-blue-600 hover:text-blue-700 transition font-medium"
+              className="inline-block text-sm text-blue-600 hover:text-blue-700 font-medium transition"
             >
               Back to sign in
             </Link>
           </div>
         ) : (
           // Form State
-          <form onSubmit={handleSubmit} className="space-y-lg">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert
                 type="error"
@@ -125,24 +131,22 @@ export default function ForgotPasswordPage() {
               />
             )}
 
-            <div>
-              <p className="text-sm text-gray-600 mb-lg">
-                Enter your email address and we'll send you a link to reset your password.
-              </p>
+            <p className="text-sm text-gray-600">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
 
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  if (error) setError('')
-                }}
-                disabled={loading}
-                required
-              />
-            </div>
+            <Input
+              label="Email Address"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                if (error) setError('')
+              }}
+              disabled={loading}
+              required
+            />
 
             {/* Submit Button */}
             <Button
@@ -157,7 +161,7 @@ export default function ForgotPasswordPage() {
             </Button>
 
             {/* Back to Login */}
-            <div className="text-center pt-md border-t border-gray-200">
+            <div className="text-center pt-4 border-t border-gray-200">
               <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition">
                 Remember your password?{' '}
                 <span className="text-blue-600 font-medium hover:text-blue-700">Sign in</span>
@@ -166,11 +170,6 @@ export default function ForgotPasswordPage() {
           </form>
         )}
       </Card>
-
-      {/* Footer */}
-      <p className="text-xs text-gray-500 text-center">
-        © 2026 ConektaBots. All rights reserved.
-      </p>
     </div>
   )
 }

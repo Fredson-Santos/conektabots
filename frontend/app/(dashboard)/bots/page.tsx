@@ -100,6 +100,11 @@ export default function BotsPage() {
     setEditingBot(null)
   }
 
+  // Calculate statistics
+  const totalBots = bots.length
+  const activeBots = bots.filter((bot) => bot.ativo).length
+  const inactiveBots = totalBots - activeBots
+
   return (
     <DashboardLayout
       sidebarItems={navigationItems}
@@ -122,12 +127,102 @@ export default function BotsPage() {
         </Button>
       }
     >
-      <div className="space-y-lg">
+      <div className="space-y-8">
         {/* Page Description */}
         <div>
           <p className="text-sm text-gray-600">
             Create, configure, and manage your Telegram bots.
           </p>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Total Bots Card */}
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Total Bots
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-gray-900">
+                  {totalBots}
+                </p>
+              </div>
+              <div className="rounded-lg bg-blue-50 p-3">
+                <svg
+                  className="h-6 w-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Bots Card */}
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Active
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-gray-900">
+                  {activeBots}
+                </p>
+              </div>
+              <div className="rounded-lg bg-green-50 p-3">
+                <svg
+                  className="h-6 w-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Inactive Bots Card */}
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Inactive
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-gray-900">
+                  {inactiveBots}
+                </p>
+              </div>
+              <div className="rounded-lg bg-gray-100 p-3">
+                <svg
+                  className="h-6 w-6 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Error Alert */}

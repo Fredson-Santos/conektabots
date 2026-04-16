@@ -1,6 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  PencilIcon,
+  TrashIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/outline'
 import { Bot } from '../hooks/useBots'
 
 interface BotsTableProps {
@@ -54,12 +61,12 @@ export default function BotsTable({
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="rounded-lg border border-gray-200 bg-white p-4 h-16 animate-pulse"
+            className="rounded-lg border border-gray-200 bg-white p-4 h-16 opacity-60 animate-pulse"
           >
             <div className="flex gap-4">
-              <div className="h-4 w-32 bg-gray-200 rounded" />
-              <div className="h-4 w-32 bg-gray-200 rounded" />
-              <div className="h-4 w-16 bg-gray-200 rounded" />
+              <div className="h-4 w-32 bg-gray-300 rounded" />
+              <div className="h-4 w-32 bg-gray-300 rounded" />
+              <div className="h-4 w-16 bg-gray-300 rounded" />
             </div>
           </div>
         ))}
@@ -69,9 +76,12 @@ export default function BotsTable({
 
   if (bots.length === 0) {
     return (
-      <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-        <p className="text-lg text-gray-600 font-medium">No bots yet</p>
-        <p className="mt-1 text-sm text-gray-500">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
+        <div className="flex justify-center mb-4">
+          <SparklesIcon className="h-12 w-12 text-gray-400" />
+        </div>
+        <p className="text-lg font-semibold text-gray-900">No bots yet</p>
+        <p className="mt-2 text-sm text-gray-600">
           Create your first bot to get started
         </p>
       </div>
@@ -81,34 +91,32 @@ export default function BotsTable({
   return (
     <div className="space-y-4">
       {/* Table - Desktop View */}
-      <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200 bg-white">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wide">
                 Bot Name
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wide">
                 API ID
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wide">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wide">
                 Created
               </th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+              <th className="px-6 py-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wide">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody>
-            {bots.map((bot, index) => (
+            {bots.map((bot) => (
               <tr
                 key={bot.id}
-                className={`border-b border-gray-200 transition hover:bg-blue-50 ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                }`}
+                className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
               >
                 {/* Bot Name */}
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">
@@ -121,31 +129,23 @@ export default function BotsTable({
                 </td>
 
                 {/* Status */}
-                <td className="px-6 py-4 text-sm">
+                <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleToggleStatus(bot)}
-                      disabled={togglingId === bot.id}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                        bot.ativo
-                          ? 'bg-green-500 hover:bg-green-600'
-                          : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
-                      aria-label="Toggle bot status"
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          bot.ativo ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span
-                      className={`text-xs font-medium ${
-                        bot.ativo ? 'text-green-600' : 'text-gray-600'
-                      }`}
-                    >
-                      {bot.ativo ? 'Active' : 'Inactive'}
-                    </span>
+                    {bot.ativo ? (
+                      <>
+                        <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                        <span className="text-sm font-medium text-green-600">
+                          Active
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircleIcon className="h-5 w-5 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-600">
+                          Inactive
+                        </span>
+                      </>
+                    )}
                   </div>
                 </td>
 
@@ -156,46 +156,22 @@ export default function BotsTable({
 
                 {/* Actions */}
                 <td className="px-6 py-4">
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => onEdit(bot)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition"
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                       title="Edit bot"
                     >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                      Edit
+                      <PencilIcon className="h-4 w-4" />
+                      <span className="hidden sm:inline">Edit</span>
                     </button>
                     <button
                       onClick={() => onDelete(bot)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition"
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                       title="Delete bot"
                     >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                      Delete
+                      <TrashIcon className="h-4 w-4" />
+                      <span className="hidden sm:inline">Delete</span>
                     </button>
                   </div>
                 </td>
@@ -210,30 +186,22 @@ export default function BotsTable({
         {bots.map((bot) => (
           <div
             key={bot.id}
-            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+            className="rounded-lg border border-gray-200 bg-white p-4"
           >
             <div className="flex items-start justify-between gap-4 mb-3">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{bot.nome}</h3>
-                <p className="text-sm text-gray-600 font-mono mt-1">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 truncate">
+                  {bot.nome}
+                </h3>
+                <p className="text-sm text-gray-600 font-mono mt-1 truncate">
                   {bot.api_id}
                 </p>
               </div>
-              <button
-                onClick={() => handleToggleStatus(bot)}
-                disabled={togglingId === bot.id}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  bot.ativo
-                    ? 'bg-green-500 hover:bg-green-600'
-                    : 'bg-gray-300 hover:bg-gray-400'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    bot.ativo ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+              {bot.ativo ? (
+                <CheckCircleIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
+              ) : (
+                <XCircleIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+              )}
             </div>
 
             <div className="mb-3 text-xs text-gray-500">
@@ -243,14 +211,16 @@ export default function BotsTable({
             <div className="flex gap-2">
               <button
                 onClick={() => onEdit(bot)}
-                className="flex-1 rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-200 transition"
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
+                <PencilIcon className="h-4 w-4" />
                 Edit
               </button>
               <button
                 onClick={() => onDelete(bot)}
-                className="flex-1 rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-200 transition"
+                className="flex-1 rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
               >
+                <TrashIcon className="h-4 w-4" />
                 Delete
               </button>
             </div>
@@ -260,7 +230,7 @@ export default function BotsTable({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4">
+        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
           <div className="text-sm text-gray-600">
             Page {currentPage} of {totalPages} • {bots.length} items shown
           </div>
@@ -268,16 +238,16 @@ export default function BotsTable({
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              ← Previous
+              Previous
             </button>
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Next →
+              Next
             </button>
           </div>
         </div>
