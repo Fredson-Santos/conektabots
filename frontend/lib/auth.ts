@@ -57,4 +57,20 @@ export const auth = {
     }
     return false
   },
+
+  // Get stored user data
+  getUserData: (): { user_id: string; tenant_id: string; role: string; name?: string; email?: string } | null => {
+    if (typeof window !== 'undefined') {
+      const user_id = sessionStorage.getItem('user_id')
+      if (!user_id) return null
+      return {
+        user_id,
+        tenant_id: sessionStorage.getItem('tenant_id') || '',
+        role: sessionStorage.getItem('role') || '',
+        name: sessionStorage.getItem('user_name') || undefined,
+        email: sessionStorage.getItem('user_email') || undefined,
+      }
+    }
+    return null
+  },
 }

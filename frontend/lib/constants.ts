@@ -19,4 +19,5 @@ export const ENDPOINTS = {
   LOGOUT: '/auth/logout',
   BOTS: '/bots',
   MARKETPLACES: '/marketplaces',
+  REGRAS: '/regras',
 }
