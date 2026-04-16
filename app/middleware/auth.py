@@ -56,6 +56,13 @@ async def auth_middleware(request: Request, call_next):
             content={"error": "Invalid token"},
         )
 
+    # Check if payload is None (decode_token returns None on JWTError)
+    if payload is None:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": "Invalid or expired token"},
+        )
+
     # Inject into request state
     request.state.token = token
     request.state.user_id = payload.get("sub")
