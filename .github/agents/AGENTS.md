@@ -208,6 +208,9 @@ When working with the default Copilot agent, it can automatically delegate tasks
 - ✅ Use one agent per focused task (avoid mixing concerns)
 - ✅ Review each agent's output before proceeding
 - ✅ Reference agent names in chat for clarity
+- ✅ **Tasks MUST align with current phase** (all agents follow `.project/roadmap.md`)
+- ✅ **Changelog MUST be updated** after task completion (see `.project/changelog.md`)
+- ✅ **Git commits MUST be detailed** (follow section 7️⃣ of agent-safety.instructions.md)
 
 ---
 

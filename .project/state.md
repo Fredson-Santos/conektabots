@@ -3,6 +3,7 @@
 **Last Updated**: Abril 15, 2026  
 **Phase**: Fase 2 Backend ✅ Complete  
 **Next Phase**: Fase 3 Frontend (Next.js)  
+**Agent Oversight**: ✅ Roadmap + Changelog enforcement enabled  
 
 ---
 

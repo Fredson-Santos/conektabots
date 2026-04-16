@@ -722,6 +722,7 @@ Use this before executing ANY code modification:
 
 ## 🔗 Related Documentation
 
+- [Project Workflow Rules](./project-workflow.instructions.md) — Roadmap alignment + changelog updates
 - [Agents Configuration](./../agents/AGENTS.md) — Agent setup rules
 - [Security Audit Skill](./../skills/security-audit/SKILL.md) — Security procedures
 - [Project Roadmap](./../../../.project/roadmap.md) — Development phases
