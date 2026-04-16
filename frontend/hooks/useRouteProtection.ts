@@ -27,7 +27,7 @@ export function useAuthRedirect() {
 
   useEffect(() => {
     if (auth.isAuthenticated()) {
-      router.push('/dashboard')
+      router.push('/bots')
     }
   }, [router])
 }

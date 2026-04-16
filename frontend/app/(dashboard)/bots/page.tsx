@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { DashboardLayout, navigationItems } from '@/app/components/layout'
+import { Button, Alert } from '@/app/components/ui'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import { useBots, Bot, BotCreateInput } from './hooks/useBots'
 import BotsTable from './components/BotsTable'
 import CreateBotModal from './components/CreateBotModal'
@@ -98,76 +101,75 @@ export default function BotsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Bots Management</h1>
-          <p className="mt-1 text-gray-600">
-            Create, configure, and manage your Telegram bots.
-          </p>
-        </div>
-        <button
+    <DashboardLayout
+      sidebarItems={navigationItems}
+      title="Bots Management"
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Bots' },
+      ]}
+      actions={
+        <Button
+          variant="primary"
+          size="md"
+          icon={<PlusIcon className="w-5 h-5" />}
           onClick={() => {
             setEditingBot(null)
             setIsCreateModalOpen(true)
           }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 active:bg-blue-800 transition w-full sm:w-auto justify-center sm:justify-start"
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
           Create Bot
-        </button>
-      </div>
-
-      {/* Error Alert */}
-      {error && !loading && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          <h3 className="font-semibold">Error Loading Bots</h3>
-          <p className="mt-1 text-sm">{error}</p>
+        </Button>
+      }
+    >
+      <div className="space-y-lg">
+        {/* Page Description */}
+        <div>
+          <p className="text-sm text-gray-600">
+            Create, configure, and manage your Telegram bots.
+          </p>
         </div>
-      )}
 
-      {/* Bots Table */}
-      <BotsTable
-        bots={bots}
-        loading={loading && bots.length === 0}
-        onEdit={handleEditBot}
-        onDelete={(bot) => setDeleteBotModal(bot)}
-        onToggleStatus={handleToggleBotStatus}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
+        {/* Error Alert */}
+        {error && !loading && (
+          <Alert
+            type="error"
+            title="Error Loading Bots"
+            description={error}
+            action={{ label: 'Retry', onClick: () => fetchBots(currentPage, pageSize) }}
+          />
+        )}
 
-      {/* Create/Edit Bot Modal */}
-      <CreateBotModal
-        isOpen={isCreateModalOpen}
-        onClose={handleCloseModal}
-        onSubmit={editingBot ? handleUpdateBot : handleCreateBot}
-        bot={editingBot}
-        isLoading={isSubmitting}
-      />
+        {/* Bots Table */}
+        <BotsTable
+          bots={bots}
+          loading={loading && bots.length === 0}
+          onEdit={handleEditBot}
+          onDelete={(bot) => setDeleteBotModal(bot)}
+          onToggleStatus={handleToggleBotStatus}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
 
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={deleteBot_modal !== null}
-        bot={deleteBot_modal}
-        isLoading={isDeletingBot}
-        onConfirm={handleDeleteBot}
-        onCancel={() => setDeleteBotModal(null)}
-      />
-    </div>
+        {/* Create/Edit Bot Modal */}
+        <CreateBotModal
+          isOpen={isCreateModalOpen}
+          onClose={handleCloseModal}
+          onSubmit={editingBot ? handleUpdateBot : handleCreateBot}
+          bot={editingBot}
+          isLoading={isSubmitting}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={deleteBot_modal !== null}
+          bot={deleteBot_modal}
+          isLoading={isDeletingBot}
+          onConfirm={handleDeleteBot}
+          onCancel={() => setDeleteBotModal(null)}
+        />
+      </div>
+    </DashboardLayout>
   )
 }

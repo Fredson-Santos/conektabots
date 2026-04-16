@@ -56,10 +56,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   signup: async (name: string, email: string, password: string) => {
     try {
       const api = getApi()
+      // Split name into first/last for backend schema
+      const nameParts = name.trim().split(' ')
+      const first_name = nameParts[0] || name
+      const last_name = nameParts.slice(1).join(' ') || '.'
+
       const response = await api.post<AuthResponse>(ENDPOINTS.SIGNUP, {
-        name,
         email,
         password,
+        password_confirm: password,
+        first_name,
+        last_name,
       })
 
       const { access_token, refresh_token, user_id, tenant_id, expires_in, role } = response.data

@@ -2,21 +2,12 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuthStore } from '@/hooks/useAuth'
 import { useAuthRedirect } from '@/hooks/useRouteProtection'
-import {
-  InputField,
-  FormButton,
-  FormContainer,
-  ErrorAlert,
-  FormLink,
-} from '@/app/components/AuthForm'
-import {
-  validateEmail,
-  validatePassword,
-  validateName,
-  validatePasswordMatch,
-} from '@/lib/validation'
+import { Input, Button, Alert, Card } from '@/app/components/ui'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { validateEmail, validatePassword, validateName } from '@/lib/validation'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -29,17 +20,16 @@ export default function SignupPage() {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
   })
   const [errors, setErrors] = useState<{
     name?: string
     email?: string
     password?: string
-    confirmPassword?: string
   }>({})
   const [apiError, setApiError] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {}
@@ -59,16 +49,8 @@ export default function SignupPage() {
       newErrors.password = passwordValidation.error
     }
 
-    const matchValidation = validatePasswordMatch(
-      formData.password,
-      formData.confirmPassword
-    )
-    if (!matchValidation.valid) {
-      newErrors.confirmPassword = matchValidation.error
-    }
-
     if (!agreeToTerms) {
-      setApiError('You must agree to the Terms & Conditions')
+      setApiError('You must agree to the Terms & Conditions to continue.')
       return false
     }
 
@@ -88,8 +70,7 @@ export default function SignupPage() {
 
     try {
       await signup(formData.name, formData.email, formData.password)
-      // Redirect to dashboard
-      router.push('/dashboard')
+      router.push('/bots')
     } catch (error: any) {
       setLoading(false)
       const errorMessage =
@@ -102,155 +83,192 @@ export default function SignupPage() {
 
   const passwordStrength = React.useMemo(() => {
     const pwd = formData.password
+    if (!pwd) return null
     let strength = 0
     if (pwd.length >= 8) strength++
     if (/[A-Z]/.test(pwd)) strength++
     if (/[0-9]/.test(pwd)) strength++
     if (/[!@#$%^&*]/.test(pwd)) strength++
 
-    return {
-      level: strength,
-      label: strength === 0 ? 'Weak' : strength < 2 ? 'Fair' : strength < 4 ? 'Good' : 'Strong',
-      color:
-        strength === 0
-          ? 'bg-gray-300'
-          : strength < 2
-            ? 'bg-red-500'
-            : strength < 4
-              ? 'bg-yellow-500'
-              : 'bg-green-500',
-    }
+    const levels = [
+      { label: 'Weak', color: 'bg-red-500', text: 'text-red-600' },
+      { label: 'Fair', color: 'bg-amber-500', text: 'text-amber-600' },
+      { label: 'Good', color: 'bg-yellow-500', text: 'text-yellow-600' },
+      { label: 'Strong', color: 'bg-green-500', text: 'text-green-600' },
+    ]
+    const level = Math.max(0, strength - 1)
+    return { level: strength, ...levels[level] }
   }, [formData.password])
 
   return (
-    <FormContainer title="Create Account" subtitle="Join ConektaBots today">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {apiError && (
-          <ErrorAlert
-            message={apiError}
-            onDismiss={() => setApiError('')}
-          />
-        )}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900">ConektaBots</h1>
+        <p className="text-sm text-gray-600 mt-2">Create your account</p>
+      </div>
 
-        <InputField
-          label="Full Name"
-          name="name"
-          type="text"
-          placeholder="John Doe"
-          value={formData.name}
-          onChange={(e) => {
-            setFormData({ ...formData, name: e.target.value })
-            if (errors.name) setErrors({ ...errors, name: undefined })
-          }}
-          error={errors.name}
-          disabled={loading}
-          autoComplete="name"
-        />
+      {/* Form Card */}
+      <Card variant="default" className="p-8">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Error Alert */}
+          {apiError && (
+            <Alert
+              type="error"
+              title="Signup failed"
+              description={apiError}
+              dismissible
+              onDismiss={() => setApiError('')}
+            />
+          )}
 
-        <InputField
-          label="Email Address"
-          name="email"
-          type="email"
-          placeholder="you@example.com"
-          value={formData.email}
-          onChange={(e) => {
-            setFormData({ ...formData, email: e.target.value })
-            if (errors.email) setErrors({ ...errors, email: undefined })
-          }}
-          error={errors.email}
-          disabled={loading}
-          autoComplete="email"
-        />
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={formData.password}
+          {/* Full Name */}
+          <Input
+            label="Full Name"
+            type="text"
+            placeholder="João Silva"
+            value={formData.name}
             onChange={(e) => {
-              setFormData({ ...formData, password: e.target.value })
-              if (errors.password) setErrors({ ...errors, password: undefined })
+              setFormData({ ...formData, name: e.target.value })
+              if (errors.name) setErrors({ ...errors, name: undefined })
             }}
+            error={errors.name}
             disabled={loading}
-            autoComplete="new-password"
-            className={`w-full px-4 py-2 border rounded-lg font-medium text-gray-900 placeholder-gray-400 transition focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-              errors.password
-                ? 'border-red-500 focus:ring-red-500 bg-red-50'
-                : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
-            } ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
+            autoComplete="name"
             required
           />
 
-          {formData.password && (
-            <div className="mt-2">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-gray-600">Password Strength</span>
-                <span className={`font-semibold ${passwordStrength.color === 'bg-green-500' ? 'text-green-600' : passwordStrength.color === 'bg-yellow-500' ? 'text-yellow-600' : 'text-red-600'}`}>
-                  {passwordStrength.label}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${passwordStrength.color}`}
-                  style={{ width: `${(passwordStrength.level / 4) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
+          {/* Email */}
+          <Input
+            label="Email Address"
+            type="email"
+            placeholder="you@example.com"
+            value={formData.email}
+            onChange={(e) => {
+              setFormData({ ...formData, email: e.target.value })
+              if (errors.email) setErrors({ ...errors, email: undefined })
+            }}
+            error={errors.email}
+            disabled={loading}
+            autoComplete="email"
+            required
+          />
 
-          {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-          <p className="mt-2 text-xs text-gray-500">
-            Must contain: 8+ characters, uppercase letter, number, and special character (!@#$%^&*)
+          {/* Password with show/hide + strength indicator */}
+          <div>
+            <div className="relative">
+              <Input
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) => {
+                  setFormData({ ...formData, password: e.target.value })
+                  if (errors.password) setErrors({ ...errors, password: undefined })
+                }}
+                error={errors.password}
+                disabled={loading}
+                autoComplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
+                className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 transition disabled:opacity-50"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <EyeSlashIcon className="w-5 h-5" />
+                ) : (
+                  <EyeIcon className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+
+            {/* Password Strength */}
+            {passwordStrength && (
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Password strength</span>
+                  <span className={`text-xs font-semibold ${passwordStrength.text}`}>
+                    {passwordStrength.label}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div
+                    className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength.color}`}
+                    style={{ width: `${(passwordStrength.level / 4) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-400">
+                  Min. 8 chars, uppercase, number & special character (!@#$%^&*)
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Terms Agreement */}
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              id="agreeToTerms"
+              type="checkbox"
+              checked={agreeToTerms}
+              onChange={(e) => {
+                setAgreeToTerms(e.target.checked)
+                if (e.target.checked && apiError.includes('Terms')) setApiError('')
+              }}
+              disabled={loading}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-blue-600 cursor-pointer"
+            />
+            <span className="text-sm text-gray-700 leading-snug">
+              I agree to the{' '}
+              <a
+                href="#"
+                className="text-blue-600 hover:text-blue-700 font-medium underline-offset-2 hover:underline"
+                onClick={(e) => e.preventDefault()}
+              >
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a
+                href="#"
+                className="text-blue-600 hover:text-blue-700 font-medium underline-offset-2 hover:underline"
+                onClick={(e) => e.preventDefault()}
+              >
+                Privacy Policy
+              </a>
+            </span>
+          </label>
+
+          {/* Submit Button */}
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
+            disabled={loading}
+            loading={loading}
+            type="submit"
+          >
+            Create account
+          </Button>
+        </form>
+
+        {/* Sign In Link */}
+        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+          <p className="text-sm text-gray-600">
+            Already have an account?{' '}
+            <Link href="/login" className="text-blue-600 font-medium hover:text-blue-700 transition">
+              Sign in
+            </Link>
           </p>
         </div>
+      </Card>
 
-        <InputField
-          label="Confirm Password"
-          name="confirmPassword"
-          type="password"
-          placeholder="••••••••"
-          value={formData.confirmPassword}
-          onChange={(e) => {
-            setFormData({ ...formData, confirmPassword: e.target.value })
-            if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined })
-          }}
-          error={errors.confirmPassword}
-          disabled={loading}
-          autoComplete="new-password"
-        />
-
-        <div className="flex items-start">
-          <input
-            id="agreeToTerms"
-            type="checkbox"
-            checked={agreeToTerms}
-            onChange={(e) => setAgreeToTerms(e.target.checked)}
-            disabled={loading}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer mt-0.5"
-          />
-          <label htmlFor="agreeToTerms" className="ml-2 text-sm text-gray-700 cursor-pointer">
-            I agree to the{' '}
-            <a href="#" className="font-semibold text-blue-600 hover:text-blue-700">
-              Terms & Conditions
-            </a>
-          </label>
-        </div>
-
-        <FormButton type="submit" loading={loading} disabled={loading}>
-          Create Account
-        </FormButton>
-      </form>
-
-      <FormLink
-        text="Already have an account?"
-        linkText="Sign in"
-        href="/login"
-      />
-    </FormContainer>
+      {/* Footer */}
+      <p className="text-xs text-gray-500 text-center">
+        © 2026 ConektaBots. All rights reserved.
+      </p>
+    </div>
   )
 }

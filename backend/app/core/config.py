@@ -47,7 +47,14 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: Optional[str] = None
     
     # CORS
-    CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: list = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:8000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+    ]
     
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True

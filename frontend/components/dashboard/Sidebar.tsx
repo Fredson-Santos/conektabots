@@ -10,12 +10,13 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Bots', href: '/dashboard/bots', icon: '🤖' },
-  { label: 'Rules', href: '/dashboard/rules', icon: '📋' },
-  { label: 'Schedules', href: '/dashboard/schedules', icon: '⏱️' },
-  { label: 'Marketplaces', href: '/dashboard/marketplaces', icon: '🏪' },
-  { label: 'Logs', href: '/dashboard/logs', icon: '📝' },
-  { label: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
+  { label: 'Overview', href: '/', icon: '📊' },
+  { label: 'Bots', href: '/bots', icon: '🤖' },
+  { label: 'Regras', href: '/rules', icon: '📋' },
+  { label: 'Agendamentos', href: '/schedules', icon: '⏱️' },
+  { label: 'Marketplaces', href: '/marketplaces', icon: '🏪' },
+  { label: 'Logs', href: '/logs', icon: '📝' },
+  { label: 'Configurações', href: '/settings', icon: '⚙️' },
 ]
 
 interface SidebarProps {
@@ -27,8 +28,8 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
-    if (href === '/dashboard' && pathname === '/dashboard') return true
-    if (href !== '/dashboard' && pathname.startsWith(href)) return true
+    if (href === '/' && pathname === '/') return true
+    if (href !== '/' && pathname.startsWith(href)) return true
     return false
   }
 

@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import DashboardLayout from '@/components/dashboard/DashboardLayout'
+import { DashboardLayout, navigationItems } from '@/app/components/layout'
 import { useAuthStore } from '@/hooks/useAuth'
 
 export default function DashboardRootLayout({
@@ -11,17 +11,42 @@ export default function DashboardRootLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (isMounted && !isAuthenticated) {
       router.push('/login')
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, isMounted])
 
-  if (!isAuthenticated) {
+  if (!isMounted || !isAuthenticated) {
     return null
   }
 
-  return <DashboardLayout>{children}</DashboardLayout>
+  const handleLogout = () => {
+    // TODO: Call logout API and clear auth store
+    router.push('/login')
+  }
+
+  return (
+    <DashboardLayout
+      sidebarItems={navigationItems}
+      user={
+        user
+          ? {
+              name: user.name || user.email || 'User',
+              email: user.email || '',
+            }
+          : undefined
+      }
+      onLogout={handleLogout}
+    >
+      {children}
+    </DashboardLayout>
+  )
 }

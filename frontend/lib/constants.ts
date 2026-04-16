@@ -14,7 +14,7 @@ export const STORAGE_KEYS = {
 // API Endpoints
 export const ENDPOINTS = {
   LOGIN: '/auth/login',
-  SIGNUP: '/auth/signup',
+  SIGNUP: '/auth/register',
   REFRESH: '/auth/refresh',
   LOGOUT: '/auth/logout',
   BOTS: '/bots',

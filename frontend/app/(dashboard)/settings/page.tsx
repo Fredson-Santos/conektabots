@@ -1,68 +1,86 @@
 'use client'
 
-import { useState } from 'react'
-import { AccountTab } from './components/AccountTab'
-import { TeamTab } from './components/TeamTab'
-import { BillingTab } from './components/BillingTab'
-
-type TabId = 'account' | 'team' | 'billing'
-
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'account', label: 'Conta', icon: '👤' },
-  { id: 'team', label: 'Equipe', icon: '👥' },
-  { id: 'billing', label: 'Plano & Faturamento', icon: '💳' },
-]
+import { DashboardLayout, navigationItems } from '@/app/components/layout'
+import { Card, Button } from '@/app/components/ui'
+import {
+  UserCircleIcon,
+  BellIcon,
+  CreditCardIcon,
+} from '@heroicons/react/24/outline'
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('account')
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-
-  const showToast = (type: 'success' | 'error', message: string) => {
-    setToast({ type, message })
-    setTimeout(() => setToast(null), 3500)
-  }
-
   return (
-    <div className="space-y-6">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
-          toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-        }`}>
-          {toast.type === 'success' ? '✅ ' : '❌ '}{toast.message}
+    <DashboardLayout
+      sidebarItems={navigationItems}
+      title="Settings"
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Settings' },
+      ]}
+    >
+      <div className="space-y-lg max-w-2xl">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Manage your account preferences and application settings.
+          </p>
         </div>
-      )}
 
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
-        <p className="mt-1 text-gray-600">Gerencie sua conta, equipe e plano de assinatura.</p>
-      </div>
+        {/* Account Settings */}
+        <Card>
+          <Card.Header
+            title="Account Settings"
+            action={<UserCircleIcon className="w-6 h-6 text-gray-400" />}
+          />
+          <Card.Body className="space-y-md">
+            <p className="text-sm text-gray-600">
+              Update your profile information, email address, and password.
+            </p>
+          </Card.Body>
+          <Card.Footer align="right">
+            <Button variant="secondary" size="md">
+              Edit Account
+            </Button>
+          </Card.Footer>
+        </Card>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <span>{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+        {/* Notifications */}
+        <Card>
+          <Card.Header
+            title="Notifications"
+            action={<BellIcon className="w-6 h-6 text-gray-400" />}
+          />
+          <Card.Body className="space-y-md">
+            <p className="text-sm text-gray-600">
+              Configure email alerts and notification preferences for your bots and activity.
+            </p>
+          </Card.Body>
+          <Card.Footer align="right">
+            <Button variant="secondary" size="md">
+              Edit Notifications
+            </Button>
+          </Card.Footer>
+        </Card>
 
-      {/* Tab Content */}
-      <div>
-        {activeTab === 'account' && <AccountTab onToast={showToast} />}
-        {activeTab === 'team' && <TeamTab onToast={showToast} />}
-        {activeTab === 'billing' && <BillingTab onToast={showToast} />}
+        {/* Billing */}
+        <Card>
+          <Card.Header
+            title="Billing & Subscription"
+            action={<CreditCardIcon className="w-6 h-6 text-gray-400" />}
+          />
+          <Card.Body className="space-y-md">
+            <p className="text-sm text-gray-600">
+              Manage payment methods, view invoices, and upgrade your subscription plan.
+            </p>
+          </Card.Body>
+          <Card.Footer align="right">
+            <Button variant="secondary" size="md">
+              View Billing
+            </Button>
+          </Card.Footer>
+        </Card>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

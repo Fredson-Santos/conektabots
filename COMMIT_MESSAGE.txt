@@ -1,0 +1,200 @@
+feat: Create base SaaS component library (Phase 1)
+
+Implement 6 foundational components following Modern SaaS Design System patterns.
+This is the foundation for all subsequent dashboard refactoring.
+
+COMPONENTS DELIVERED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Button.tsx (5 variants × 3 sizes + states)
+   • Variants: primary, secondary, tertiary, ghost, danger
+   • Sizes: sm (h-8), md (h-10), lg (h-12)
+   • States: default, hover, focus (ring-2), active, disabled, loading
+   • Features: icon left/right, fullWidth, loading spinner
+   • All focus rings visible (focus:ring-2 focus:ring-offset-0)
+
+2. Input.tsx (5 types + validation)
+   • Types: text, email, password, textarea, number
+   • States: default, filled, focus, error (red border), disabled
+   • Features: 
+     - Label with required indicator
+     - Error message display (replaces helper text)
+     - Helper text below input (gray-500)
+     - Icon support (left of input)
+     - Max length indicator for textarea
+     - aria-invalid="true" for error state
+     - Proper htmlFor association
+
+3. Card.tsx (Composable structure)
+   • Components: Card, Card.Header, Card.Body, Card.Footer
+   • Header: title, subtitle, action button
+   • Body: flexible content
+   • Footer: alignment options (left/center/right), button group
+   • Variants: default (border), elevated (shadow on hover)
+   • Dividers: top border on footer, bottom border on header
+   • Spacing: 16px padding (8px grid system)
+
+4. StatusBadge.tsx (6 status types)
+   • Statuses: active (green), inactive (gray), processing (blue spinner),
+     error (red), warning (amber), success (green)
+   • Variants: pill (full background), dot (icon + text)
+   • Sizes: xs, sm, md
+   • Icons: Using Heroicons (@heroicons/react/24/outline)
+
+5. Alert.tsx (4 types + dismiss/action)
+   • Types: info (blue), success (green), warning (amber), error (red)
+   • Features:
+     - Dismissible with × button (fade out)
+     - Optional action button with onClick
+     - Title + description layout
+     - Icon left, content center, dismiss right
+     - Semantic color-coded backgrounds
+
+6. EmptyState.tsx (Centered no-data layout)
+   • Layout: Icon → Title → Description → Primary Action + Secondary Action
+   • Icon size: 48×48 (w-12 h-12)
+   • Min height: 384px (flex centered)
+   • Mobile responsive: buttons stack on sm
+   • Primary action: blue button with optional icon
+   • Secondary action: text link
+
+SUPPORTING FILES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• icons.ts: Shared SpinnerIcon component (animated SVG)
+• index.ts: Central export file for all components + types
+• DEMO.tsx: Comprehensive showcase of all components + testing checklist
+
+DESIGN SYSTEM COMPLIANCE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Colors (from Tailwind):
+  • Primary: blue-500 (#2563EB), blue-600 (hover)
+  • Semantic: green-600 (success), red-600 (error), amber-600 (warning)
+  • Neutral: gray palette (gray-50 to gray-900)
+
+✓ Typography (via Tailwind):
+  • Font: Inter (configured in tailwind.config.js)
+  • Scale: xs/sm/base/lg (text-* classes)
+  • Weights: normal (400), medium (500), semibold (600), bold (700)
+
+✓ Spacing (8px grid system):
+  • Padding: 8px, 16px, 24px, 32px (px-2, px-4, px-6, px-8)
+  • Gap: 8px, 16px, 24px (gap-2, gap-4, gap-6)
+  • Height: 32px (h-8), 40px (h-10), 48px (h-12)
+
+QUALITY CHECKS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ TypeScript: Full strict mode compliance
+  • All components typed with interfaces
+  • No 'any' types used
+  • ComponentPropsWithoutRef for HTML element inheritance
+  • Proper React.FC<Props> typing
+
+✓ Accessibility:
+  • Focus rings visible (focus:ring-2 focus:ring-offset-0)
+  • Disabled states with cursor-not-allowed
+  • aria-labels on icon-only buttons
+  • aria-invalid="true" on error inputs
+  • aria-disabled on disabled elements
+  • Form labels properly associated (htmlFor)
+  • Semantic structure (button, input, label)
+
+✓ Responsive Design:
+  • Mobile-first approach
+  • Works at 320px, 768px, 1024px, 1440px+
+  • Buttons/inputs stack on mobile
+  • Card layout responsive
+  • EmptyState buttons flex-row on md+
+
+✓ No Anti-patterns:
+  • ✗ No emojis (Heroicons only)
+  • ✗ No hardcoded colors (Tailwind classes throughout)
+  • ✗ No custom CSS (pure Tailwind)
+  • ✗ No console warnings
+
+✓ Icon Integration:
+  • Source: @heroicons/react/24/outline (outline style)
+  • Sizes: w-3 h-3 (xs), w-4 h-4 (default), w-5 h-5 (lg)
+  • Colors: text-{color}-600 or text-gray-400 (default)
+  • No SVG manipulation (imported as React components)
+
+FILES STRUCTURE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app/components/ui/
+├── Button.tsx           (Primary action component)
+├── Input.tsx            (Form inputs with validation)
+├── Card.tsx             (Composable container)
+├── StatusBadge.tsx      (Status indicator)
+├── Alert.tsx            (Notification messages)
+├── EmptyState.tsx       (No-data state)
+├── icons.ts             (Shared utilities)
+├── index.ts             (Centralized exports)
+└── DEMO.tsx             (Showcase + testing)
+
+USAGE EXAMPLE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import { Button, Input, Card, StatusBadge, Alert, EmptyState } from '@/app/components/ui'
+
+// Button with loading state
+<Button variant="primary" loading>Creating bot...</Button>
+
+// Form group with Input
+<Input
+  label="Bot Name"
+  type="text"
+  placeholder="My first bot"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  error={nameError}
+  required
+/>
+
+// Card with composable structure
+<Card>
+  <Card.Header title="Settings" action={<SaveButton />} />
+  <Card.Body>{/* content */}</Card.Body>
+  <Card.Footer>
+    <Button variant="secondary">Cancel</Button>
+    <Button>Save</Button>
+  </Card.Footer>
+</Card>
+
+TESTING VERIFICATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Mount DEMO.tsx at any route to verify:
+□ Button: All 5 variants, 3 sizes, icons, disabled, loading states
+□ Input: All 5 types, error state (red), helper text, validation
+□ Card: Header/body/footer composable, dividers visible
+□ StatusBadge: 6 statuses with correct colors + icons
+□ Alert: 4 types with dismiss button working, action button optional
+□ EmptyState: Icon centered, layout responsive, buttons clickable
+□ No console errors (React strict mode clean)
+□ Keyboard navigation: Tab through all elements (focus rings visible)
+□ Mobile: Responsive at 320px (inputs/buttons stack)
+□ No emojis (Heroicons only)
+
+NEXT PHASE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Phase 2: Dashboard Layout Components
+- Navigation/Sidebar
+- Header/TopBar
+- Grid layout
+- Data table components
+
+Phase 3: Feature Pages
+- Bot creation form
+- Dashboard metrics
+- Settings pages
+- User management
+
+All built with these 6 foundation components.
+
+BREAKING CHANGES: None
+DEPENDENCIES: @heroicons/react (already available)
+TESTING: Manual verification on all states + responsive breakpoints
