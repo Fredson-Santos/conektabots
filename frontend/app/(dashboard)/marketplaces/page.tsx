@@ -3,7 +3,14 @@
 import { useEffect, useState } from 'react'
 import { DashboardLayout, navigationItems } from '@/app/components/layout'
 import { Button, Alert, EmptyState, Card } from '@/app/components/ui'
-import { PlusIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  PlusIcon,
+  ShoppingBagIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline'
 import { useMarketplaces, Marketplace, MarketplaceCreateInput } from './hooks/useMarketplaces'
 import MarketplacesTable from './components/MarketplacesTable'
 import CreateMarketplaceModal from './components/CreateMarketplaceModal'
@@ -27,14 +34,7 @@ function DeleteMarketplaceModal({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md p-lg space-y-md">
         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto">
-          <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
+          <TrashIcon className="h-6 w-6 text-red-600" />
         </div>
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900">Remove Integration?</h3>
@@ -125,11 +125,6 @@ export default function MarketplacesPage() {
     }
   }
 
-  const handleTest = async (m: Marketplace) => {
-    const result = await testConnection(m.id)
-    console.log(result)
-  }
-
   return (
     <DashboardLayout
       sidebarItems={navigationItems}
@@ -156,7 +151,7 @@ export default function MarketplacesPage() {
         {/* Page Description */}
         <div>
           <p className="text-sm text-gray-600">
-            Connect and manage integrations with sales marketplaces like Shopee, Mercado Livre, and Amazon.
+            Connect and manage marketplace integrations with encrypted credentials and tenant isolation.
           </p>
         </div>
 
@@ -173,9 +168,9 @@ export default function MarketplacesPage() {
         {/* Empty State */}
         {!loading && marketplaces.length === 0 ? (
           <EmptyState
-            icon={<ShoppingCartIcon className="w-12 h-12 text-gray-400" />}
+            icon={<ShoppingBagIcon className="w-12 h-12 text-gray-400" />}
             title="No integrations yet"
-            description="Connect your first marketplace to automate messages across multiple channels"
+            description="Create your first marketplace integration to start linking orders and rules."
             action={{
               label: 'Add Integration',
               onClick: () => {
@@ -198,24 +193,27 @@ export default function MarketplacesPage() {
               <Card>
                 <div className="p-md space-y-sm">
                   <p className="text-xs font-semibold uppercase text-gray-500">Active</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {marketplaces.filter((m) => m.status === 'ativo').length}
+                  <p className="text-2xl font-bold text-green-600 flex items-center gap-2">
+                    <CheckCircleIcon className="h-5 w-5" />
+                    {marketplaces.filter((m) => m.ativo).length}
                   </p>
                 </div>
               </Card>
               <Card>
                 <div className="p-md space-y-sm">
-                  <p className="text-xs font-semibold uppercase text-gray-500">Errors</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {marketplaces.filter((m) => m.status === 'erro').length}
+                  <p className="text-xs font-semibold uppercase text-gray-500">Configured</p>
+                  <p className="text-2xl font-bold text-blue-600 flex items-center gap-2">
+                    <ShieldCheckIcon className="h-5 w-5" />
+                    {marketplaces.filter((m) => m.is_configured).length}
                   </p>
                 </div>
               </Card>
               <Card>
                 <div className="p-md space-y-sm">
                   <p className="text-xs font-semibold uppercase text-gray-500">Inactive</p>
-                  <p className="text-2xl font-bold text-gray-500">
-                    {marketplaces.filter((m) => m.status === 'inativo').length}
+                  <p className="text-2xl font-bold text-gray-500 flex items-center gap-2">
+                    <ExclamationTriangleIcon className="h-5 w-5" />
+                    {marketplaces.filter((m) => !m.ativo).length}
                   </p>
                 </div>
               </Card>
@@ -230,7 +228,9 @@ export default function MarketplacesPage() {
                 setIsModalOpen(true)
               }}
               onDelete={(m) => setDeletingMarketplace(m)}
-              onTestConnection={handleTest}
+              onToggleActive={async (m) => {
+                await setMarketplaceActive(m.id, !m.ativo)
+              }}
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={(p) => fetchMarketplaces(p)}

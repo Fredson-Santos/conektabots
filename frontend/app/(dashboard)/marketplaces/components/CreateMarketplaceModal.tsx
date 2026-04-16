@@ -2,6 +2,7 @@
 
 import { Marketplace, MarketplaceCreateInput } from '../hooks/useMarketplaces'
 import MarketplaceForm from './MarketplaceForm'
+import { ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 interface CreateMarketplaceModalProps {
   isOpen: boolean
@@ -17,19 +18,29 @@ export default function CreateMarketplaceModal({ isOpen, onClose, onSubmit, mark
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+      <div className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              {marketplace ? `✏️ Editar: ${marketplace.nome}` : '🔗 Nova Integração'}
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">Conecte um marketplace ao ConektaBots</p>
+        <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <ShoppingBagIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {marketplace ? `Editar integração` : 'Nova integração'}
+              </h2>
+              <p className="mt-0.5 text-sm text-gray-500">
+                {marketplace ? marketplace.nome : 'Conecte um marketplace ao ConektaBots'}
+              </p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            aria-label="Fechar modal"
+          >
+            <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
 

@@ -25,6 +25,10 @@ class MarketplaceIntegracaoBase(BaseModel):
         description="shopee, mercado_livre, amazon, magalu, americanas, aliexpress, shein"
     )
     nome: str = Field(min_length=1, max_length=100, description="Nome descritivo")
+    credenciais: Optional[dict[str, str]] = Field(
+        default=None,
+        description="Credenciais criptografadas antes de persistir",
+    )
 
 
 class MarketplaceIntegracaoCreate(MarketplaceIntegracaoBase):
@@ -41,6 +45,10 @@ class MarketplaceIntegracaoUpdate(BaseModel):
     """Atualizar integração (sem credenciais)."""
     nome: Optional[str] = Field(default=None, max_length=100)
     ativo: Optional[bool] = Field(default=None)
+    credenciais: Optional[dict[str, str]] = Field(
+        default=None,
+        description="Nova carga de credenciais para substituir a atual",
+    )
     
     model_config = {"json_schema_extra": {
         "example": {

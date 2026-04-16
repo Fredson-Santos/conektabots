@@ -2,19 +2,34 @@
 
 import { Marketplace, MarketplaceType } from '../hooks/useMarketplaces'
 
-const MARKETPLACE_OPTIONS: { value: MarketplaceType; label: string; icon: string; color: string }[] = [
-  { value: 'shopee', label: 'Shopee', icon: '🛍️', color: 'bg-orange-50 border-orange-200 text-orange-700' },
-  { value: 'mercadolivre', label: 'Mercado Livre', icon: '🛒', color: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
-  { value: 'amazon', label: 'Amazon', icon: '📦', color: 'bg-amber-50 border-amber-200 text-amber-700' },
-  { value: 'magalu', label: 'Magazine Luiza', icon: '🏪', color: 'bg-blue-50 border-blue-200 text-blue-700' },
-  { value: 'outro', label: 'Outro', icon: '🔗', color: 'bg-gray-50 border-gray-200 text-gray-700' },
+import {
+  BuildingStorefrontIcon,
+  CubeIcon,
+  LinkIcon,
+  PencilIcon,
+  PlusIcon,
+  PowerIcon,
+  ShoppingBagIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline'
+
+const MARKETPLACE_OPTIONS: { value: MarketplaceType; label: string; icon: typeof ShoppingBagIcon; color: string }[] = [
+  { value: 'shopee', label: 'Shopee', icon: ShoppingBagIcon, color: 'bg-orange-50 border-orange-200 text-orange-700' },
+  { value: 'mercado_livre', label: 'Mercado Livre', icon: BuildingStorefrontIcon, color: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
+  { value: 'amazon', label: 'Amazon', icon: CubeIcon, color: 'bg-amber-50 border-amber-200 text-amber-700' },
+  { value: 'magalu', label: 'Magazine Luiza', icon: ShieldCheckIcon, color: 'bg-blue-50 border-blue-200 text-blue-700' },
+  { value: 'americanas', label: 'Americanas', icon: LinkIcon, color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+  { value: 'aliexpress', label: 'AliExpress', icon: LinkIcon, color: 'bg-red-50 border-red-200 text-red-700' },
+  { value: 'shein', label: 'Shein', icon: LinkIcon, color: 'bg-pink-50 border-pink-200 text-pink-700' },
+  { value: 'outro', label: 'Outro', icon: LinkIcon, color: 'bg-gray-50 border-gray-200 text-gray-700' },
 ]
 
 const STATUS_CONFIG = {
-  ativo: { label: 'Ativo', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
-  inativo: { label: 'Inativo', color: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400' },
-  erro: { label: 'Erro', color: 'bg-red-100 text-red-700', dot: 'bg-red-500' },
-  testando: { label: 'Testando...', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500' },
+  active: { label: 'Ativo', color: 'bg-green-50 text-green-700 border-green-200', dot: 'bg-green-500' },
+  inactive: { label: 'Inativo', color: 'bg-gray-50 text-gray-700 border-gray-200', dot: 'bg-gray-400' },
+  configured: { label: 'Configurado', color: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
+  missing: { label: 'Sem credenciais', color: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
 }
 
 interface MarketplacesTableProps {
@@ -22,7 +37,7 @@ interface MarketplacesTableProps {
   loading: boolean
   onEdit: (m: Marketplace) => void
   onDelete: (m: Marketplace) => void
-  onTestConnection: (m: Marketplace) => void
+  onToggleActive: (m: Marketplace) => Promise<void>
   currentPage: number
   totalPages: number
   onPageChange: (page: number) => void
@@ -45,7 +60,7 @@ export default function MarketplacesTable({
   loading,
   onEdit,
   onDelete,
-  onTestConnection,
+  onToggleActive,
   currentPage,
   totalPages,
   onPageChange,
@@ -56,7 +71,7 @@ export default function MarketplacesTable({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {['Integração', 'Tipo', 'Status', 'Último Teste', 'Ações'].map(h => (
+              {['Integração', 'Tipo', 'Estado', 'Atualizado', 'Ações'].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
@@ -72,10 +87,12 @@ export default function MarketplacesTable({
   if (marketplaces.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
-        <div className="text-5xl mb-4">🔗</div>
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+          <PlusIcon className="h-6 w-6 text-gray-400" />
+        </div>
         <h3 className="text-lg font-semibold text-gray-900">Nenhuma integração configurada</h3>
         <p className="mt-2 text-sm text-gray-500">
-          Conecte sua primeira plataforma de marketplace para começar.
+          Crie a primeira integração para começar a conectar pedidos e regras.
         </p>
       </div>
     )
@@ -88,15 +105,16 @@ export default function MarketplacesTable({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {['Integração', 'Tipo', 'Status', 'Último Teste', 'Ações'].map(h => (
+              {['Integração', 'Tipo', 'Estado', 'Atualizado', 'Ações'].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
-            {marketplaces.map(m => {
-              const tipo = MARKETPLACE_OPTIONS.find(o => o.value === m.tipo)
-              const status = STATUS_CONFIG[m.status] || STATUS_CONFIG.inativo
+            {marketplaces.map((m) => {
+              const tipo = MARKETPLACE_OPTIONS.find((o) => o.value === m.tipo)
+              const status = m.ativo ? STATUS_CONFIG.active : STATUS_CONFIG.inactive
+              const configState = m.is_configured ? STATUS_CONFIG.configured : STATUS_CONFIG.missing
               return (
                 <tr key={m.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
@@ -105,48 +123,49 @@ export default function MarketplacesTable({
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${tipo?.color}`}>
-                      {tipo?.icon} {tipo?.label}
+                      {tipo ? <tipo.icon className="h-3.5 w-3.5" /> : null}
+                      {tipo?.label || m.tipo}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                      {status.label}
-                    </span>
+                    <div className="space-y-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border ${status.color}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                        {status.label}
+                      </span>
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border ${configState.color}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${configState.dot}`} />
+                        {configState.label}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-500">
-                    {m.ultimo_teste
-                      ? new Date(m.ultimo_teste).toLocaleString('pt-BR')
-                      : 'Nunca testado'}
+                    {m.atualizado_em
+                      ? new Date(m.atualizado_em).toLocaleString('pt-BR')
+                      : new Date(m.criado_em).toLocaleString('pt-BR')}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() => onTestConnection(m)}
-                        className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors"
-                        title="Testar conexão"
+                        onClick={() => onToggleActive(m)}
+                        className={`p-1.5 rounded-lg transition-colors ${m.ativo ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'}`}
+                        title={m.ativo ? 'Desativar' : 'Ativar'}
                       >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <PowerIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onEdit(m)}
                         className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
                         title="Editar"
                       >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDelete(m)}
                         className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                         title="Excluir"
                       >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <TrashIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -159,35 +178,43 @@ export default function MarketplacesTable({
 
       {/* Mobile Cards */}
       <div className="md:hidden space-y-3">
-        {marketplaces.map(m => {
-          const tipo = MARKETPLACE_OPTIONS.find(o => o.value === m.tipo)
-          const status = STATUS_CONFIG[m.status] || STATUS_CONFIG.inativo
+        {marketplaces.map((m) => {
+          const tipo = MARKETPLACE_OPTIONS.find((o) => o.value === m.tipo)
+          const status = m.ativo ? STATUS_CONFIG.active : STATUS_CONFIG.inactive
+          const configState = m.is_configured ? STATUS_CONFIG.configured : STATUS_CONFIG.missing
           return (
             <div key={m.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-gray-900">{m.nome}</p>
                   <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg border mt-1 ${tipo?.color}`}>
-                    {tipo?.icon} {tipo?.label}
+                    {tipo ? <tipo.icon className="h-3.5 w-3.5" /> : null}
+                    {tipo?.label || m.tipo}
                   </span>
                 </div>
-                <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                  {status.label}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border ${status.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                    {status.label}
+                  </span>
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border ${configState.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${configState.dot}`} />
+                    {configState.label}
+                  </span>
+                </div>
               </div>
               <p className="text-xs text-gray-400 mt-2">
-                {m.ultimo_teste ? `Testado: ${new Date(m.ultimo_teste).toLocaleString('pt-BR')}` : 'Nunca testado'}
+                Atualizado em {new Date(m.atualizado_em || m.criado_em).toLocaleString('pt-BR')}
               </p>
               <div className="mt-3 flex gap-2">
-                <button onClick={() => onTestConnection(m)} className="flex-1 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                  ✅ Testar
+                <button onClick={() => onToggleActive(m)} className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${m.ativo ? 'text-amber-700 bg-amber-50 hover:bg-amber-100' : 'text-green-700 bg-green-50 hover:bg-green-100'}`}>
+                  {m.ativo ? 'Desativar' : 'Ativar'}
                 </button>
                 <button onClick={() => onEdit(m)} className="flex-1 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                  ✏️ Editar
+                  Editar
                 </button>
                 <button onClick={() => onDelete(m)} className="flex-1 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
-                  🗑 Excluir
+                  Excluir
                 </button>
               </div>
             </div>

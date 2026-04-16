@@ -3,41 +3,59 @@
 import { useState, useCallback } from 'react'
 import { getApi } from '@/lib/api'
 
-export type MarketplaceType = 'shopee' | 'mercadolivre' | 'amazon' | 'magalu' | 'outro'
+export type MarketplaceType =
+  | 'shopee'
+  | 'mercado_livre'
+  | 'amazon'
+  | 'magalu'
+  | 'americanas'
+  | 'aliexpress'
+  | 'shein'
+  | 'outro'
 
 export interface Marketplace {
   id: string
+  tenant_id: string
   nome: string
   tipo: MarketplaceType
   ativo: boolean
-  status: 'ativo' | 'inativo' | 'erro' | 'testando'
-  ultimo_teste?: string
+  is_configured: boolean
   criado_em: string
-  tenant_id: string
+  atualizado_em: string
+  deletado_em?: string | null
 }
 
 export interface MarketplaceCreateInput {
   nome: string
   tipo: MarketplaceType
-  credenciais: Record<string, string>
+  credenciais?: Record<string, string>
+}
+
+export interface MarketplaceUpdateInput {
+  nome?: string
+  tipo?: MarketplaceType
+  credenciais?: Record<string, string>
+  ativo?: boolean
 }
 
 export const MARKETPLACE_FIELD_SCHEMAS: Record<MarketplaceType, { key: string; label: string; placeholder: string; required: boolean; secret?: boolean }[]> = {
   shopee: [
-    { key: 'partner_id', label: 'Partner ID', placeholder: 'Ex: 1234567', required: true },
-    { key: 'partner_key', label: 'Partner Key', placeholder: 'Chave secreta da API', required: true, secret: true },
-    { key: 'shop_id', label: 'Shop ID', placeholder: 'ID da sua loja', required: true },
+    { key: 'shop_id', label: 'Shop ID', placeholder: 'Ex: 123456', required: true },
+    { key: 'app_id', label: 'App ID', placeholder: 'Identificador da aplicação', required: true },
+    { key: 'app_secret', label: 'App Secret', placeholder: 'Chave secreta da integração', required: true, secret: true },
+    { key: 'access_token', label: 'Access Token', placeholder: 'Token de acesso atual', required: false, secret: true },
   ],
-  mercadolivre: [
-    { key: 'client_id', label: 'Client ID', placeholder: 'App ID do ML', required: true },
-    { key: 'client_secret', label: 'Client Secret', placeholder: 'Secret da aplicação', required: true, secret: true },
-    { key: 'seller_id', label: 'Seller ID', placeholder: 'Seu ID de vendedor', required: false },
+  mercado_livre: [
+    { key: 'app_id', label: 'App ID', placeholder: 'App ID do Mercado Livre', required: true },
+    { key: 'app_secret', label: 'App Secret', placeholder: 'Secret da aplicação', required: true, secret: true },
+    { key: 'access_token', label: 'Access Token', placeholder: 'Token de acesso', required: true, secret: true },
+    { key: 'user_id', label: 'User ID', placeholder: 'Identificador do vendedor', required: true },
   ],
   amazon: [
-    { key: 'access_key', label: 'Access Key ID', placeholder: 'AKIA...', required: true },
-    { key: 'secret_key', label: 'Secret Access Key', placeholder: 'Chave secreta AWS', required: true, secret: true },
+    { key: 'aws_access_key', label: 'AWS Access Key', placeholder: 'AKIA...', required: true },
+    { key: 'aws_secret_key', label: 'AWS Secret Key', placeholder: 'Chave secreta AWS', required: true, secret: true },
     { key: 'seller_id', label: 'Seller ID', placeholder: 'Merchant token', required: true },
-    { key: 'marketplace_id', label: 'Marketplace ID', placeholder: 'Ex: A2Q3Y263D00KWC', required: true },
+    { key: 'region', label: 'Region', placeholder: 'us-east-1', required: false },
   ],
   magalu: [
     { key: 'client_id', label: 'Client ID', placeholder: 'ID da integração', required: true },
@@ -46,6 +64,19 @@ export const MARKETPLACE_FIELD_SCHEMAS: Record<MarketplaceType, { key: string; l
   outro: [
     { key: 'api_key', label: 'API Key', placeholder: 'Chave da API', required: true, secret: true },
     { key: 'endpoint', label: 'Endpoint URL', placeholder: 'https://api.exemplo.com', required: false },
+  ],
+  americanas: [
+    { key: 'app_id', label: 'App ID', placeholder: 'ID da aplicação', required: true },
+    { key: 'app_secret', label: 'App Secret', placeholder: 'Secret da aplicação', required: true, secret: true },
+  ],
+  aliexpress: [
+    { key: 'app_key', label: 'App Key', placeholder: 'Chave da aplicação', required: true },
+    { key: 'app_secret', label: 'App Secret', placeholder: 'Secret da aplicação', required: true, secret: true },
+    { key: 'api_gateway', label: 'API Gateway', placeholder: 'https://api.example.com', required: true },
+  ],
+  shein: [
+    { key: 'app_key', label: 'App Key', placeholder: 'Chave da integração', required: true },
+    { key: 'app_secret', label: 'App Secret', placeholder: 'Secret da integração', required: true, secret: true },
   ],
 }
 
@@ -58,10 +89,27 @@ interface UseMarketplacesReturn {
 
   fetchMarketplaces: (page?: number, pageSize?: number) => Promise<void>
   createMarketplace: (data: MarketplaceCreateInput) => Promise<Marketplace>
-  updateMarketplace: (id: string, data: Partial<MarketplaceCreateInput>) => Promise<Marketplace>
+  updateMarketplace: (id: string, data: MarketplaceUpdateInput) => Promise<Marketplace>
   deleteMarketplace: (id: string) => Promise<void>
-  testConnection: (id: string) => Promise<{ success: boolean; message: string }>
+  setMarketplaceActive: (id: string, ativo: boolean) => Promise<Marketplace>
   refetch: () => Promise<void>
+}
+
+const normalizeMarketplace = (marketplace: unknown): Marketplace => {
+  const raw = marketplace as Record<string, unknown>
+  const tipo = raw.tipo === 'mercadolivre' ? 'mercado_livre' : String(raw.tipo || 'outro') as MarketplaceType
+
+  return {
+    id: String(raw.id || ''),
+    tenant_id: String(raw.tenant_id || ''),
+    nome: String(raw.nome || ''),
+    tipo,
+    ativo: Boolean(raw.ativo),
+    is_configured: Boolean(raw.is_configured),
+    criado_em: String(raw.criado_em || ''),
+    atualizado_em: String(raw.atualizado_em || raw.criado_em || ''),
+    deletado_em: raw.deletado_em ? String(raw.deletado_em) : null,
+  }
 }
 
 export function useMarketplaces(): UseMarketplacesReturn {
@@ -85,13 +133,13 @@ export function useMarketplaces(): UseMarketplacesReturn {
         let list: Marketplace[] = []
 
         if (Array.isArray(data)) {
-          list = data
+          list = data.map(normalizeMarketplace)
           setTotalPages(Math.ceil(data.length / size))
         } else if (data.items) {
-          list = data.items
+          list = data.items.map(normalizeMarketplace)
           setTotalPages(data.total_pages || 1)
         } else if (data.data) {
-          list = data.data
+          list = Array.isArray(data.data) ? data.data.map(normalizeMarketplace) : []
         }
 
         setMarketplaces(list)
@@ -113,8 +161,9 @@ export function useMarketplaces(): UseMarketplacesReturn {
       const api = getApi()
       const response = await api.post('/marketplaces', data)
       const created = response.data
-      setMarketplaces(prev => [created, ...prev])
-      return created
+      const normalized = normalizeMarketplace(created)
+      setMarketplaces(prev => [normalized, ...prev])
+      return normalized
     } catch (err) {
       console.error('Error creating marketplace:', err)
       const msg = err instanceof Error ? err.message : 'Failed to create marketplace.'
@@ -124,12 +173,12 @@ export function useMarketplaces(): UseMarketplacesReturn {
   }, [])
 
   const updateMarketplace = useCallback(
-    async (id: string, data: Partial<MarketplaceCreateInput>): Promise<Marketplace> => {
+    async (id: string, data: MarketplaceUpdateInput): Promise<Marketplace> => {
       try {
         setError(null)
         const api = getApi()
         const response = await api.patch(`/marketplaces/${id}`, data)
-        const updated = response.data
+        const updated = normalizeMarketplace(response.data)
         setMarketplaces(prev => prev.map(m => (m.id === id ? updated : m)))
         return updated
       } catch (err) {
@@ -156,22 +205,13 @@ export function useMarketplaces(): UseMarketplacesReturn {
     }
   }, [])
 
-  const testConnection = useCallback(async (id: string): Promise<{ success: boolean; message: string }> => {
-    try {
-      const api = getApi()
-      const response = await api.post(`/marketplaces/${id}/test`)
-      setMarketplaces(prev =>
-        prev.map(m => m.id === id ? { ...m, status: response.data.success ? 'ativo' : 'erro', ultimo_teste: new Date().toISOString() } : m)
-      )
-      return response.data
-    } catch (err) {
-      console.error('Error testing connection:', err)
-      setMarketplaces(prev =>
-        prev.map(m => m.id === id ? { ...m, status: 'erro', ultimo_teste: new Date().toISOString() } : m)
-      )
-      return { success: false, message: err instanceof Error ? err.message : 'Connection test failed.' }
-    }
-  }, [])
+  const setMarketplaceActive = useCallback(
+    async (id: string, ativo: boolean): Promise<Marketplace> => {
+      const updated = await updateMarketplace(id, { ativo })
+      return updated
+    },
+    [updateMarketplace]
+  )
 
   const refetch = useCallback(async () => {
     await fetchMarketplaces(currentPage)
@@ -187,7 +227,7 @@ export function useMarketplaces(): UseMarketplacesReturn {
     createMarketplace,
     updateMarketplace,
     deleteMarketplace,
-    testConnection,
+    setMarketplaceActive,
     refetch,
   }
 }

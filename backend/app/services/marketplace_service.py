@@ -5,6 +5,7 @@ Encrypts integration credentials.
 """
 
 from datetime import datetime
+import json
 from uuid import UUID
 from typing import Optional
 from sqlalchemy import select, and_
@@ -46,7 +47,7 @@ class MarketplaceService:
         # Encrypt credentials if provided
         credenciais_enc = None
         if marketplace_in.credenciais:
-            credenciais_json = marketplace_in.credenciais.model_dump_json()
+            credenciais_json = json.dumps(marketplace_in.credenciais, ensure_ascii=False)
             credenciais_enc = await self.crypto.encrypt(credenciais_json)
 
         integration = MarketplaceIntegracao(
@@ -60,7 +61,9 @@ class MarketplaceService:
         await self.session.commit()
         await self.session.refresh(integration)
 
-        return MarketplaceIntegracaoResponse.from_attributes(integration)
+        return MarketplaceIntegracaoResponse.model_validate(
+            integration, from_attributes=True
+        )
 
     async def get(
         self, marketplace_id: UUID, tenant_id: UUID
@@ -84,7 +87,9 @@ class MarketplaceService:
         integration = result.scalar_one_or_none()
 
         return (
-            MarketplaceIntegracaoResponse.from_attributes(integration)
+            MarketplaceIntegracaoResponse.model_validate(
+                integration, from_attributes=True
+            )
             if integration
             else None
         )
@@ -105,7 +110,8 @@ class MarketplaceService:
         integrations = result.scalars().all()
 
         return [
-            MarketplaceIntegracaoResponse.from_attributes(m) for m in integrations
+            MarketplaceIntegracaoResponse.model_validate(m, from_attributes=True)
+            for m in integrations
         ]
 
     async def list_by_tipo(self, tenant_id: UUID, tipo: str) -> list[MarketplaceIntegracaoResponse]:
@@ -128,7 +134,8 @@ class MarketplaceService:
         integrations = result.scalars().all()
 
         return [
-            MarketplaceIntegracaoResponse.from_attributes(m) for m in integrations
+            MarketplaceIntegracaoResponse.model_validate(m, from_attributes=True)
+            for m in integrations
         ]
 
     async def update(
@@ -162,7 +169,7 @@ class MarketplaceService:
         if marketplace_in.nome:
             integration.nome = marketplace_in.nome
         if marketplace_in.credenciais:
-            credenciais_json = marketplace_in.credenciais.model_dump_json()
+            credenciais_json = json.dumps(marketplace_in.credenciais, ensure_ascii=False)
             integration.credenciais_enc = await self.crypto.encrypt(
                 credenciais_json
             )
@@ -172,7 +179,9 @@ class MarketplaceService:
         await self.session.commit()
         await self.session.refresh(integration)
 
-        return MarketplaceIntegracaoResponse.from_attributes(integration)
+        return MarketplaceIntegracaoResponse.model_validate(
+            integration, from_attributes=True
+        )
 
     async def delete(self, marketplace_id: UUID, tenant_id: UUID) -> None:
         """Soft delete marketplace integration.

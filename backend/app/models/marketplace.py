@@ -135,6 +135,7 @@ class MarketplaceIntegracao(Base):
         """Verifica se integração está ativa (não deletada e ativo=true)."""
         return self.ativo and not self.is_deleted()
     
+    @property
     def is_configured(self) -> bool:
         """Verifica se credenciais foram configuradas (credenciais_enc não é NULL)."""
         return self.credenciais_enc is not None
