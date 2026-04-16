@@ -543,9 +543,9 @@ Update this table as you complete tasks:
 
 | Task | Status | Commit | Date | Notes |
 |------|--------|--------|------|-------|
-| A0 - Monorepo Reorg | ⏳ PENDING | - | - | Move to /backend + /frontend |
-| A1 - Setup Next.js | ⏳ PENDING | - | - | Starting after A0 |
-| A2 - Backend CORS | ⏳ PENDING | - | - | After A1 |
+| A0 - Monorepo Reorg | ✅ COMPLETE | 425d073 | Apr 15 | /backend + /frontend estrutura pronta |
+| A1 - Setup Next.js | ✅ COMPLETE | e7bf489 | Apr 15 | Next.js 15 + TypeScript + auth infrastructure |
+| A2 - Backend CORS | 🔄 IN PROGRESS | - | Apr 15 | Delegado para Backend Dev (validação) |
 | B1 - Auth Pages | ⏳ PENDING | - | - | After A2 |
 | C1 - Dashboard Layout | ⏳ PENDING | - | - | After B1 |
 | D1 - Bots CRUD | ⏳ PENDING | - | - | Paralelo com D2-D6 |
