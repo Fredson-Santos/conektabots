@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-04-15 22:50:47",
+  "tests_passed": 5,
+  "tests_failed": 3,
+  "results": [
+    {
+      "test": "GET /health",
+      "status": "PASS",
+      "details": "Status: 200, DB: connected"
+    },
+    {
+      "test": "POST /api/v1/auth/register",
+      "status": "PASS",
+      "details": "Status: 201, User ID: d0af7a57-001a-44b0-bd9a-52d5d2e67d84, TTL: 1800s"
+    },
+    {
+      "test": "POST /api/v1/auth/login",
+      "status": "PASS",
+      "details": "Status: 200, Token Type: Bearer"
+    },
+    {
+      "test": "GET /api/v1/bots (with token)",
+      "status": "FAIL",
+      "details": "Status: 401"
+    },
+    {
+      "test": "POST /api/v1/auth/refresh",
+      "status": "PASS",
+      "details": "Status: 200, New Token: eyJhbGciOiJIUzI1NiIsInR5cCI6Ik..."
+    },
+    {
+      "test": "GET /api/v1/marketplaces",
+      "status": "FAIL",
+      "details": "Status: 401"
+    },
+    {
+      "test": "GET /api/v1/bots (invalid token)",
+      "status": "PASS",
+      "details": "Status: 401 (Unauthorized)"
+    },
+    {
+      "test": "GET /api/v1/bots (no auth)",
+      "status": "FAIL",
+      "details": "Status: 307 (expected 403)"
+    }
+  ]
+}

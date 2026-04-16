@@ -5,7 +5,7 @@
 **Target Completion**: 3-4 weeks  
 **Deployment**: Vercel  
 **Database**: PostgreSQL (local) + FastAPI JWT  
-**Status**: 📍 In Progress
+**Status**: 📍 Foundation Phase Complete (A0-A2) | Next: B1 Auth Pages
 
 ---
 
@@ -13,9 +13,9 @@
 
 | Task | Subtask | Status | Assignee | Est. Hours | Dependencies |
 |------|---------|--------|----------|-----------|-------------|
-| **A0** | Reorganizar para monorepo (/backend + /frontend) | ⏳ PENDING | Backend Dev | 1-2h | ✅ Estrutura pronta |
-| **A1** | Setup Next.js 15 + Auth Infrastructure | ⏳ PENDING | Frontend Designer | 8-10h | → A0 ✅ |
-| **A2** | Backend Validation (CORS + Endpoints) | ⏳ PENDING | Backend Dev | 3-4h | → A1 |
+| **A0** | Reorganizar para monorepo (/backend + /frontend) | ✅ COMPLETE | Backend Dev | 1-2h | ✅ Estrutura pronta |
+| **A1** | Setup Next.js 15 + Auth Infrastructure | ✅ COMPLETE | Frontend Designer | 8-10h | → A0 ✅ |
+| **A2** | Backend Validation (CORS + Endpoints) | ✅ COMPLETE | Backend Dev | 3-4h | → A1 |
 | **B1** | Auth Pages (Login/Signup/Protected Routes) | ⏳ PENDING | Frontend Designer | 6-8h | → A1 ✅ |
 | **C1** | Dashboard Layout Base | ⏳ PENDING | Frontend Designer | 4-6h | → B1 |
 | **D1** | Bots Management CRUD | ⏳ PENDING | Frontend Designer | 6-8h | → C1 |
