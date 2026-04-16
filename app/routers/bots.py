@@ -1,212 +1,209 @@
-from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import RedirectResponse, HTMLResponse
-from sqlmodel import Session, select
-from telethon import TelegramClient
-from telethon.sessions import StringSession
-from telethon.errors import SessionPasswordNeededError
-from app.models import Bot
-from app.core.config import templates, TEMP_CLIENTS
-from app.core.deps import get_session
+"""Bots Router — Telegram Account Management.
 
-router = APIRouter(prefix="/bots", tags=["bots"])
+POST /api/v1/bots — Create bot
+GET /api/v1/bots — List bots
+GET /api/v1/bots/{bot_id} — Get bot
+PATCH /api/v1/bots/{bot_id} — Update bot
+DELETE /api/v1/bots/{bot_id} — Delete bot
+POST /api/v1/bots/{bot_id}/credentials/user — Update USER credentials
+POST /api/v1/bots/{bot_id}/credentials/bot — Update BOT credentials
+"""
 
-@router.get("/adicionar", response_class=HTMLResponse)
-async def form_adicionar_bot(request: Request):
-    return templates.TemplateResponse("adicionar_bot.html", {"request": request})
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
-@router.post("/criar")
-async def criar_bot(
-    nome: str = Form(...),
-    tipo: str = Form(...),
-    api_id: str = Form(...),
-    api_hash: str = Form(...),
-    bot_token: str = Form(None),
-    phone: str = Form(None),
-    session_string: str = Form(None),
-    session: Session = Depends(get_session)
+from app.core.database import get_session
+from app.core.deps import get_current_tenant
+from app.schemas.bot import (
+    BotCreate,
+    BotUpdate,
+    BotResponse,
+    BotCredentialUpdateUser,
+    BotCredentialUpdateBot,
+)
+from app.services.bot_service import BotService
+
+
+router = APIRouter(prefix="/api/v1/bots", tags=["bots"])
+
+
+@router.post("/", response_model=BotResponse, status_code=status.HTTP_201_CREATED)
+async def create_bot(
+    bot_in: BotCreate,
+    tenant_id: UUID = Depends(get_current_tenant),
+    session: AsyncSession = Depends(get_session),
 ):
-    sessao_final = session_string
-    if tipo == "bot" and not session_string:
-        sessao_final = None 
-    
-    novo_bot = Bot(
-        nome=nome,
-        api_id=api_id,
-        api_hash=api_hash,
-        tipo=tipo,
-        bot_token=bot_token,
-        phone=phone,
-        session_string=sessao_final,
-        ativo=True
-    )
-    session.add(novo_bot)
-    session.commit()
-    return RedirectResponse(url="/", status_code=303)
+    """Create new Telegram bot/account.
 
-@router.get("/deletar/{id}")
-async def deletar_bot(id: int, session: Session = Depends(get_session)):
-    bot = session.get(Bot, id)
-    if bot:
-        session.delete(bot)
-        session.commit()
-    return RedirectResponse(url="/", status_code=303)
+    Args:
+        bot_in: Bot creation data
+        tenant_id: Injected current tenant
+        session: Database session
 
-@router.get("/toggle/{id}")
-async def toggle_bot(id: int, session: Session = Depends(get_session)):
-    bot = session.get(Bot, id)
-    if bot:
-        bot.ativo = not bot.ativo
-        session.add(bot)
-        session.commit()
-    return RedirectResponse(url="/", status_code=303)
+    Returns:
+        Created bot response (without credentials)
+    """
+    service = BotService(session)
+    return await service.create(tenant_id, bot_in)
 
-@router.get("/editar/{id}", response_class=HTMLResponse)
-async def form_editar_bot(request: Request, id: int, session: Session = Depends(get_session)):
-    bot = session.get(Bot, id)
+
+@router.get("/", response_model=list[BotResponse])
+async def list_bots(
+    tenant_id: UUID = Depends(get_current_tenant),
+    session: AsyncSession = Depends(get_session),
+):
+    """List all bots of current tenant.
+
+    Args:
+        tenant_id: Injected current tenant
+        session: Database session
+
+    Returns:
+        List of bot responses
+    """
+    service = BotService(session)
+    return await service.list_by_tenant(tenant_id)
+
+
+@router.get("/{bot_id}", response_model=BotResponse)
+async def get_bot(
+    bot_id: UUID,
+    tenant_id: UUID = Depends(get_current_tenant),
+    session: AsyncSession = Depends(get_session),
+):
+    """Get specific bot.
+
+    Args:
+        bot_id: Bot UUID
+        tenant_id: Injected current tenant
+        session: Database session
+
+    Returns:
+        Bot response or 404
+    """
+    service = BotService(session)
+    bot = await service.get(bot_id, tenant_id)
+
     if not bot:
-        return RedirectResponse(url="/", status_code=303)
-    return templates.TemplateResponse("editar_bot.html", {"request": request, "bot": bot})
-
-@router.post("/editar/{id}")
-async def atualizar_bot(
-    id: int,
-    nome: str = Form(...),
-    tipo: str = Form(...),
-    api_id: str = Form(...),
-    api_hash: str = Form(...),
-    bot_token: str = Form(None),
-    phone: str = Form(None),
-    session_string: str = Form(None),
-    session: Session = Depends(get_session)
-):
-    bot = session.get(Bot, id)
-    if bot:
-        bot.nome = nome
-        bot.tipo = tipo
-        bot.api_id = api_id
-        bot.api_hash = api_hash
-        bot.bot_token = bot_token
-        bot.phone = phone
-        
-        if session_string and session_string.strip():
-            bot.session_string = session_string
-            
-        session.add(bot)
-        session.commit()
-    return RedirectResponse(url="/", status_code=303)
-
-# --- LOGIN USERBOT ---
-
-@router.post("/userbot/enviar-codigo", response_class=HTMLResponse)
-async def userbot_enviar_codigo(
-    request: Request, 
-    nome: str = Form(...), 
-    api_id: str = Form(...), 
-    api_hash: str = Form(...), 
-    phone: str = Form(...)
-):
-    try:
-        client = TelegramClient(StringSession(), api_id, api_hash)
-        await client.connect()
-        if not await client.is_user_authorized():
-            await client.send_code_request(phone)
-            TEMP_CLIENTS[phone] = {"client": client, "nome": nome, "api_id": api_id, "api_hash": api_hash}
-            return templates.TemplateResponse("adicionar_bot.html", {
-                "request": request, 
-                "step": 2, 
-                "phone": phone, 
-                "msg": f"Código enviado para {phone}."
-            })
-        else:
-            return templates.TemplateResponse("adicionar_bot.html", {
-                "request": request, 
-                "step": 1, 
-                "error": "Já logado."
-            })
-    except Exception as e:
-        return templates.TemplateResponse("adicionar_bot.html", {
-            "request": request, 
-            "step": 1, 
-            "error": f"Erro: {str(e)}"
-        })
-
-@router.post("/userbot/validar-codigo", response_class=HTMLResponse)
-async def userbot_validar_codigo(
-    request: Request, 
-    phone: str = Form(...), 
-    code: str = Form(...), 
-    session: Session = Depends(get_session)
-):
-    if phone not in TEMP_CLIENTS:
-        return templates.TemplateResponse("adicionar_bot.html", {
-            "request": request, 
-            "step": 1, 
-            "error": "Sessão expirada."
-        })
-    
-    data = TEMP_CLIENTS[phone]
-    client = data["client"]
-    try:
-        await client.sign_in(phone, code)
-        sessao = client.session.save()
-        await client.disconnect()
-        del TEMP_CLIENTS[phone]
-        
-        novo = Bot(
-            nome=data["nome"], 
-            api_id=data["api_id"], 
-            api_hash=data["api_hash"], 
-            phone=phone, 
-            tipo="user", 
-            session_string=sessao, 
-            ativo=True
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bot não encontrado",
         )
-        session.add(novo)
-        session.commit()
-        return RedirectResponse(url="/", status_code=303)
-    except SessionPasswordNeededError:
-        return templates.TemplateResponse("adicionar_bot.html", {
-            "request": request, 
-            "step": 3, 
-            "phone": phone, 
-            "msg": "Digite sua senha 2FA."
-        })
-    except Exception as e:
-        return templates.TemplateResponse("adicionar_bot.html", {
-            "request": request, 
-            "step": 2, 
-            "phone": phone, 
-            "error": str(e)
-        })
 
-@router.post("/userbot/validar-senha")
-async def userbot_validar_senha(
-    phone: str = Form(...), 
-    password: str = Form(...), 
-    session: Session = Depends(get_session)
+    return bot
+
+
+@router.patch("/{bot_id}", response_model=BotResponse)
+async def update_bot(
+    bot_id: UUID,
+    bot_in: BotUpdate,
+    tenant_id: UUID = Depends(get_current_tenant),
+    session: AsyncSession = Depends(get_session),
 ):
-    if phone not in TEMP_CLIENTS:
-        return RedirectResponse(url="/bots/adicionar", status_code=303)
-    
-    data = TEMP_CLIENTS[phone]
-    client = data["client"]
-    try:
-        await client.sign_in(password=password)
-        sessao = client.session.save()
-        await client.disconnect()
-        del TEMP_CLIENTS[phone]
-        
-        novo = Bot(
-            nome=data["nome"], 
-            api_id=data["api_id"], 
-            api_hash=data["api_hash"], 
-            phone=phone, 
-            tipo="user", 
-            session_string=sessao, 
-            ativo=True
+    """Update bot metadata (nome, ativo).
+
+    Args:
+        bot_id: Bot UUID
+        bot_in: Update data
+        tenant_id: Injected current tenant
+        session: Database session
+
+    Returns:
+        Updated bot response
+    """
+    service = BotService(session)
+    bot = await service.update(bot_id, tenant_id, bot_in)
+
+    if not bot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bot não encontrado",
         )
-        session.add(novo)
-        session.commit()
-        return RedirectResponse(url="/", status_code=303)
-    except:
-        return RedirectResponse(url="/bots/adicionar", status_code=303)
+
+    return bot
+
+
+@router.delete("/{bot_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_bot(
+    bot_id: UUID,
+    tenant_id: UUID = Depends(get_current_tenant),
+    session: AsyncSession = Depends(get_session),
+):
+    """Delete (soft delete) bot.
+
+    Args:
+        bot_id: Bot UUID
+        tenant_id: Injected current tenant
+        session: Database session
+    """
+    service = BotService(session)
+    await service.delete(bot_id, tenant_id)
+
+
+# ===================== Credentials =====================
+
+
+@router.post(
+    "/{bot_id}/credentials/user", response_model=BotResponse
+)
+async def update_credentials_user(
+    bot_id: UUID,
+    cred_in: BotCredentialUpdateUser,
+    tenant_id: UUID = Depends(get_current_tenant),
+    session: AsyncSession = Depends(get_session),
+):
+    """Update USER-type bot credentials (api_hash, session_string).
+
+    Args:
+        bot_id: Bot UUID
+        cred_in: Credential data
+        tenant_id: Injected current tenant
+        session: Database session
+
+    Returns:
+        Updated bot response
+    """
+    service = BotService(session)
+    bot = await service.update_credentials_user(bot_id, tenant_id, cred_in)
+
+    if not bot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bot não encontrado",
+        )
+
+    return bot
+
+
+@router.post(
+    "/{bot_id}/credentials/bot", response_model=BotResponse
+)
+async def update_credentials_bot(
+    bot_id: UUID,
+    cred_in: BotCredentialUpdateBot,
+    tenant_id: UUID = Depends(get_current_tenant),
+    session: AsyncSession = Depends(get_session),
+):
+    """Update BOT-type bot credentials (bot_token).
+
+    Args:
+        bot_id: Bot UUID
+        cred_in: Credential data
+        tenant_id: Injected current tenant
+        session: Database session
+
+    Returns:
+        Updated bot response
+    """
+    service = BotService(session)
+    bot = await service.update_credentials_bot(bot_id, tenant_id, cred_in)
+
+    if not bot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bot não encontrado",
+        )
+
+    return bot
+
