@@ -1,25 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value
-
-  // Protected routes
-  if (request.nextUrl.pathname.startsWith('/dashboard')) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
-
-  // Already logged in, redirect to dashboard
-  if (
-    request.nextUrl.pathname === '/login' ||
-    request.nextUrl.pathname === '/signup'
-  ) {
-    if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-  }
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function middleware() {
+  // Client-side auth checks will handle the redirects in useEffect
+  // This middleware is just a safety net for basic routing
   return NextResponse.next()
 }
 
