@@ -4,7 +4,75 @@ All notable changes to this project are documented here. Format: [Date] - [Autho
 
 ---
 
-## [2026-04-15] - Session 10: Fase 3 Kickoff + Monorepo Reorganization ✅
+## [2026-04-16] - Session 11: Fase 3 CRUD Pages D3-D6 ✅
+
+### Type: FEATURE — FRONTEND CRUD IMPLEMENTATION
+
+#### ✅ Tasks Concluídas
+
+**D3 - Schedules Management CRUD**
+- `useSchedules.ts`: hook CRUD + `triggerManualSend()` + toggle status
+- `SchedulesTable.tsx`: table desktop + mobile cards + botão envio manual instantâneo
+- `ScheduleForm.tsx`: **wizard 6 passos** (Bot/Nome → Origens → Destinos → Horários → Tipo/Mídia → Review)
+- `CreateScheduleModal.tsx` + `DeleteScheduleModal.tsx`
+- `schedules/page.tsx`: stats cards, toast notifications, full orchestration
+
+**D4 - Marketplaces CRUD (Dynamic Forms)**
+- `useMarketplaces.ts`: `MARKETPLACE_FIELD_SCHEMAS` por tipo (Shopee/ML/Amazon/Magalu/Outro)
+- `MarketplacesTable.tsx`: badges de status (ativo/inativo/erro/testando), botão "Testar Conexão"
+- `MarketplaceForm.tsx`: tipo selector 2-step + campos dinâmicos por marketplace + show/hide secrets
+- `CreateMarketplaceModal.tsx` + delete inline na page
+- `marketplaces/page.tsx`: stats, toast, handler `testConnection`
+
+**D5 - Logs Viewer**
+- `useLogs.ts`: filtros (status/date range/search), auto-refresh polling 5s, CSV export com BOM UTF-8
+- `LogsTable.tsx`: tabela paginada com rows clicáveis + `LogDetailModal` com detalhe completo
+- `logs/page.tsx`: filtros avançados, stats (total/sucesso/erros/bloqueados), auto-refresh toggle
+
+**D6 - Settings (3 Tabs)**
+- `AccountTab.tsx`: edição perfil, alteração de senha, danger zone (delete account)
+- `TeamTab.tsx`: convite por email, RBAC in-line (admin/editor/viewer), remoção de membros
+- `BillingTab.tsx`: progress bars de uso (bots/regras/msgs/hora), 4 planos com upgrade cards
+- `settings/page.tsx`: navegação por tabs Account | Equipe | Plano & Faturamento
+
+**Infra & Fixes**
+- `lib/types.ts`: `UUID` type alias adicionado (necessário para Rules pré-existente)
+- `lib/auth.ts`: `getUserData()` para recuperar dados da sessão ativa
+- **Rules CRUD**: todos os erros TS corrigidos (`useEffect`, `useMemo`, `user`, type `undefined → null`)
+- **TypeScript**: `tsc --noEmit` limpo — **0 erros**
+
+#### 📊 Métricas Session 11
+
+| Métrica | Valor |
+|---------|-------|
+| Arquivos criados | 20 novos |
+| Arquivos modificados | 12 |
+| Linhas inseridas | ~8.200 |
+| Erros TS corrigidos | 12 |
+| Commit | `817d608` |
+
+#### 🎯 Fase 3 Progress
+
+| Task | Status |
+|------|--------|
+| A0-A2 Setup | ✅ 100% |
+| B1 Auth Pages | ✅ 100% |
+| C1 Dashboard Layout | ✅ 100% |
+| D1-D6 CRUD Pages | ✅ 100% |
+| E1 Landing Page | ⏳ PENDING |
+| F1 Polish & UX | ⏳ PENDING |
+
+**Fase 3 está 85% completa. Restam apenas E1 (Landing Page) e F1 (Polish).**
+
+#### 🚀 Next Steps
+
+- **Task E1**: Landing Page marketing (Hero, Features, Pricing, FAQ, Footer)
+- **Task F1**: Polish & UX (validação inline, error boundaries, responsividade QA)
+- **Deploy Vercel**: Após F1 completo
+
+---
+
+
 
 ### Type: PHASE 3 INITIALIZATION + STRUCTURAL REORGANIZATION
 

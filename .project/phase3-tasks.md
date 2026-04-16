@@ -5,7 +5,7 @@
 **Target Completion**: 3-4 weeks  
 **Deployment**: Vercel  
 **Database**: PostgreSQL (local) + FastAPI JWT  
-**Status**: 📍 CRUD Phase Kickoff (D1 Complete) | 50% of total tasks done
+**Status**: 📍 CRUD Phase Complete (D1-D6 Done) | 85% of total tasks done
 
 ---
 
@@ -541,15 +541,15 @@ Update this table as you complete tasks:
 |------|--------|--------|------|-------|
 | A0 - Monorepo Reorg | ✅ COMPLETE | 425d073 | Apr 15 | /backend + /frontend estrutura pronta |
 | A1 - Setup Next.js | ✅ COMPLETE | e7bf489 | Apr 15 | Next.js 15 + TypeScript + auth infrastructure |
-| A2 - Backend CORS | 🔄 IN PROGRESS | - | Apr 15 | Delegado para Backend Dev (validação) |
-| B1 - Auth Pages | ⏳ PENDING | - | - | After A2 |
-| C1 - Dashboard Layout | ⏳ PENDING | - | - | After B1 |
-| D1 - Bots CRUD | ⏳ PENDING | - | - | Paralelo com D2-D6 |
-| D2 - Rules CRUD | ⏳ PENDING | - | - | Paralelo com D1,D3-D6 |
-| D3 - Schedules CRUD | ⏳ PENDING | - | - | Paralelo com D1-D2,D4-D6 |
-| D4 - Marketplaces CRUD | ⏳ PENDING | - | - | Paralelo com D1-D3,D5-D6 |
-| D5 - Logs Viewer | ⏳ PENDING | - | - | Paralelo com D1-D4,D6 |
-| D6 - Settings & Billing | ⏳ PENDING | - | - | Paralelo com D1-D5 |
+| A2 - Backend CORS | ✅ COMPLETE | - | Apr 15 | CORS validado |
+| B1 - Auth Pages | ✅ COMPLETE | - | Apr 15 | Login/Signup funcional |
+| C1 - Dashboard Layout | ✅ COMPLETE | - | Apr 15 | Sidebar + Header responsivo |
+| D1 - Bots CRUD | ✅ COMPLETE | - | Apr 15 | Completo com 14/14 critérios |
+| D2 - Rules CRUD | ✅ COMPLETE | - | Apr 15 | Wizard 7 passos |
+| D3 - Schedules CRUD | ✅ COMPLETE | 817d608 | Apr 16 | Wizard 6 passos + envio manual |
+| D4 - Marketplaces CRUD | ✅ COMPLETE | 817d608 | Apr 16 | Forms dinâmicos + test connection |
+| D5 - Logs Viewer | ✅ COMPLETE | 817d608 | Apr 16 | Filtros + auto-refresh + CSV export |
+| D6 - Settings & Billing | ✅ COMPLETE | 817d608 | Apr 16 | 3 tabs: Account, Equipe, Faturamento |
 | E1 - Landing Page | ⏳ PENDING | - | - | Paralelo com D1-D6 |
 | F1 - Polish & UX | ⏳ PENDING | - | - | After all above |
 
