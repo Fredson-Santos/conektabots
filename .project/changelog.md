@@ -4,6 +4,145 @@ All notable changes to this project are documented here. Format: [Date] - [Autho
 
 ---
 
+## [2026-04-15] - Session 8 Summary
+
+### Type: AGENT INFRASTRUCTURE + GOVERNANCE
+
+#### ✅ Completed Tasks
+
+**Agent Infrastructure**
+- [x] Created **Frontend Designer Agent** (`.github/agents/frontend-designer.agent.md`, 260+ lines)
+  - React specialist with strong UI/UX focus
+  - Design thinking framework (discovery, aesthetics, components, polish)
+  - Modern responsive design with accessibility (WCAG AA)
+  - Bold aesthetic commitment philosophy
+  - Token-based design systems
+  - Tools: read, edit, search, web, semantic-search
+
+**Git Workflow Discipline**
+- [x] Added **Section 7️⃣ GIT WORKFLOW & COMMITS** to `agent-safety.instructions.md`
+  - Mandatory detailed commits after each task completion
+  - Commit format: `type(scope): subject` with detailed body
+  - Examples for 4 task types (features, fixes, migrations, security)
+  - Commit types: feat, fix, refactor, test, docs, security, perf, ci, chore
+  - Pre-commit checklist (tests, code quality, secrets, files)
+  - Updated final checklist with commit requirement
+
+**Project Workflow Governance**
+- [x] Created **`.github/instructions/project-workflow.instructions.md`** (360+ lines)
+  - Phase system overview (Fase 1-5 with current status)
+  - Pre-task checklist: verify phase alignment BEFORE starting
+  - **HARD RULES**: 
+    - Check roadmap alignment on every task
+    - Update changelog after completion
+    - Phase 2 FROZEN for backend (only bugfixes + docs)
+  - Changelog format standardized: `[YYYY-MM-DD] - [Session] - [Type] - [Summary]`
+  - State.md update rules (only for phase milestones)
+  - Scope creep prevention: Clear ALLOWED/NOT ALLOWED tasks per phase
+  - Reference to Fase 2 100% completion checklist
+
+**Registry Updates**
+- [x] Updated `.github/agents/AGENTS.md`
+  - Added Frontend Designer as agent #6
+  - Updated capabilities matrix (now 6 agents × 8 capabilities)
+  - Added workflow example: Frontend & Backend Integration
+  - Added mandatory practices section (roadmap + changelog + commits)
+  - Updated future candidates list
+
+**Documentation Updates**
+- [x] `.github/instructions/agent-safety.instructions.md` — Added link to project-workflow
+- [x] `.project/state.md` — Added "Agent Oversight" status indicator
+- [x] This changelog — Recording Session 8 activities
+
+#### 🔍 Findings
+
+**Scope Creep Prevention**
+- Fase 2 Backend now 100% FROZEN (40+ endpoints, 17 tables complete)
+- Frontend Designer ready for Fase 3 when user approves
+- Agents will now reject out-of-scope tasks (Fase 3, 4, 5)
+
+**Governance Effectiveness**
+- Changelog discipline now mandatory (audit trail protection)
+- Git commits enforced (detailed traceability)
+- Roadmap alignment verified before every task
+- Clear ALLOWED/NOT ALLOWED task lists per phase
+
+#### 📊 Statistics
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| Agents | 6 | ✅ Ready |
+| Skills | 1 (security-audit) | ✅ Complete |
+| Instructions | 4 | ✅ Governance complete |
+| Backend Endpoints | 40+ | ✅ Frozen (Fase 2) |
+| Database Tables | 17 | ✅ Complete |
+| Test Cases | 23 | 🔄 9/23 passing |
+
+#### 🎯 Agent Specialties Now Available
+
+| Agent | Specialty | Framework |
+|-------|-----------|-----------|
+| QA Tester | Testing, Pytest, Coverage | Python |
+| Backend Developer | FastAPI, Services, Async | Python |
+| Database Architect | PostgreSQL, Migrations, RLS | SQL |
+| Security Auditor | JWT, Encryption, Multi-tenancy | Security |
+| API Documenter | OpenAPI, Integration Guides | Documentation |
+| Frontend Designer | React, UI/UX, Design Systems | TypeScript/React |
+
+#### 🚨 Phase Status
+
+- **Fase 1 (Prototipagem)**: ✅ DONE (January 2026)
+- **Fase 2 (Backend Enterprise)**: ✅ DONE (April 15, 2026)
+- **Fase 3 (Frontend Web)**: 🔄 READY (awaiting user approval, May-Jun 2026)
+- **Fase 4 (Marketplace Clients)**: ⏳ PLANNED (Jul 2026)
+- **Fase 5 (Monitoring & Deploy)**: ⏳ PLANNED (Aug 2026)
+
+#### 🔐 Governance Rules Enacted
+
+**HARD RULES (Mandatory)**:
+1. Before ANY task: Verify phase alignment (check `.project/roadmap.md`)
+2. After task: Update `.project/changelog.md` with standardized format
+3. Every commit: Detailed message (section 7️⃣ format)
+4. Out-of-scope: Agents MUST ask user before proceeding to next phase
+
+**Tasks Now REJECTED**:
+- ❌ Creating new REST endpoints (Fase 2 frozen)
+- ❌ Modifying database schema without explicit request
+- ❌ Starting Fase 3 (Frontend) work without approval
+- ❌ Marketplace client implementations (Fase 4)
+- ❌ Production deployment (Fase 5)
+
+#### 💾 Files Changed
+
+**Created**:
+- `.github/instructions/project-workflow.instructions.md` (360+ lines)
+- `.github/agents/frontend-designer.agent.md` (260+ lines)
+
+**Modified**:
+- `.github/instructions/agent-safety.instructions.md` (added link)
+- `.github/agents/AGENTS.md` (added agent #6, matrix, practices)
+- `.project/state.md` (added oversight indicator)
+- `.project/changelog.md` (this entry)
+
+**Total**: 4 files created/modified, ~620 new lines
+
+#### 📋 Next Steps & Requirements
+
+**Before Fase 3 Frontend Starts**:
+1. User explicitly approves Fase 3 initiation
+2. @Frontend Designer begins React component design system
+3. @Backend Developer prepares any new endpoints needed by frontend
+4. @API Documenter creates integration guide
+
+**All Future Tasks MUST**:
+- [x] Verify phase alignment before starting
+- [x] Update changelog after completion
+- [x] Follow detailed git commit format (section 7️⃣)
+- [x] Respect safety rules (no deletes, no bypasses)
+- [x] Ask user if task goes out-of-scope
+
+---
+
 ## [2026-04-15] - Session 7 Summary
 
 ### Type: MAINTENANCE + TESTING + DOCUMENTATION
