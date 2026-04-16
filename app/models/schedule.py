@@ -22,3 +22,4 @@ class Agendamento(SQLModel, table=True):
     bot_id: int = Field(foreign_key="bot.id")
     bot: Optional["Bot"] = Relationship(back_populates="agendamentos")
     ativo: bool = Field(default=True)
+
